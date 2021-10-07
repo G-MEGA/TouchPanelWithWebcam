@@ -10,7 +10,6 @@ public class Test : MonoBehaviour
     RawImage rawImage;
     RectTransform rectTransform;
     AspectRatioFitter fitter;
-    bool on = false;
 
     Image[,] pointObjects;
 

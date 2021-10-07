@@ -18,7 +18,8 @@ public class CamInput
     public Vector2Int[,] markingPositions;//각 요소들은 텍스처상의 위치를 가짐. 따라서 텍스쳐가 바뀌면 얘네도 바뀌어야함.
                                //topLeft,topRight,bottomLeft,bottomRight가 바뀌었을때도 바뀌어야함
     public Color[,] baseColors;
-    public MarkingsUpdateMethod markingsUpdateMethod = MarkingsUpdateMethod.CompareH;
+
+    public MarkingsUpdateMethod markingsUpdateMethod = MarkingsUpdateMethod.CompareHRGB;//언제든지 바뀌어도 됨
 
     public void Init(string deviceName, Vector2 fL, Vector2 fR, Vector2 bL, Vector2 bR)
     {
@@ -28,7 +29,8 @@ public class CamInput
         }
 
         camTexture = new WebCamTexture(deviceName);
-        camTexture.Play();
+        if(!camTexture.isPlaying)
+            camTexture.Play();
         frontLeft = fL;
         frontRight = fR;
         backLeft = bL;
@@ -36,6 +38,21 @@ public class CamInput
 
         MarkingPositionsUpdate();
         BaseColorsUpdate();
+        markings = new bool[CamInputManager.Instance.Resolution.x, CamInputManager.Instance.Resolution.y];
+    }
+    public void Init(WebCamTexture webcamTexture, Vector2 fL, Vector2 fR, Vector2 bL, Vector2 bR)
+    {
+        camTexture = webcamTexture;
+        if (!camTexture.isPlaying)
+            camTexture.Play();
+        frontLeft = fL;
+        frontRight = fR;
+        backLeft = bL;
+        backRight = bR;
+
+        MarkingPositionsUpdate();
+        BaseColorsUpdate();
+        markings = new bool[CamInputManager.Instance.Resolution.x, CamInputManager.Instance.Resolution.y];
     }
 
     public void MarkingsUpdate()//아마도 매 프레임마다 호출?
@@ -55,6 +72,7 @@ public class CamInput
         float h, s, v;
         float currentH, currentS, currentV;
         float deltaH;
+        float deltaS;
         float deltaR;
         float deltaG;
         float deltaB;
@@ -87,7 +105,7 @@ public class CamInput
                             deltaH += 1.0f;
                         while (deltaH > 0.1f)
                             deltaH -= 1.0f;
-                        markings[i, j] = Mathf.Abs(deltaH) > 0.2f;//기준과 현재의 차이가 0.1을 넘는다면 마킹
+                        markings[i, j] = Mathf.Abs(deltaH) > 0.1f;
                         break;
                     case MarkingsUpdateMethod.CompareRGB:
                         deltaR = currentColor.r - baseColors[i, j].r;
@@ -111,7 +129,14 @@ public class CamInput
                         deltaB = currentColor.b - baseColors[i, j].b;
                         sqrRGBDistance = deltaR * deltaR + deltaG * deltaG + deltaB * deltaB;
 
-                        markings[i, j] = Mathf.Abs(deltaH) > 0.2f && sqrRGBDistance > 0.03f;//기준과 현재의 차이가 0.1을 넘는다면 마킹
+                        markings[i, j] = Mathf.Abs(deltaH) > 0.1f && sqrRGBDistance > 0.03f;
+                        break;
+                    case MarkingsUpdateMethod.CompareS:
+                        Color.RGBToHSV(baseColors[i, j], out h, out s, out v);
+                        Color.RGBToHSV(currentColor, out currentH, out currentS, out currentV);
+                        deltaS = currentS - s;
+
+                        markings[i, j] = Mathf.Abs(deltaS) > 0.1f;
                         break;
                     default:
                         break;
@@ -220,5 +245,5 @@ public class CamInput
 
 public enum MarkingsUpdateMethod
 {
-    CompareH, CompareRGB, CompareHRGB
+    CompareH, CompareRGB, CompareHRGB, CompareS
 }
