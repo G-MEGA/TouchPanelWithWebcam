@@ -3,10 +3,88 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-[RequireComponent(typeof(RawImage))]
+
+[RequireComponent(typeof(CanvasRenderer))]
+public class CamInputDisplay : MaskableGraphic
+{
+    [SerializeField] Texture m_Texture;
+
+    protected CamInputDisplay()
+    {
+        useLegacyMeshGeneration = false;
+    }
+    public void Init(int camInputIndex)
+    {
+
+    }
+
+    /// <summary>
+    /// Returns the texture used to draw this Graphic.
+    /// </summary>
+    public override Texture mainTexture
+    {
+        get
+        {
+            if (m_Texture == null)
+            {
+                if (material != null && material.mainTexture != null)
+                {
+                    return material.mainTexture;
+                }
+                return s_WhiteTexture;
+            }
+
+            return m_Texture;
+        }
+    }
+    public Texture texture
+    {
+        get
+        {
+            return m_Texture;
+        }
+        set
+        {
+            if (m_Texture == value)
+                return;
+
+            m_Texture = value;
+            SetVerticesDirty();
+            SetMaterialDirty();
+        }
+    }
+
+    protected override void OnPopulateMesh(VertexHelper vh)
+    {
+        Texture tex = mainTexture;
+        vh.Clear();
+        if (tex != null)
+        {
+            var r = GetPixelAdjustedRect();
+            var v = new Vector4(r.x, r.y, r.x + r.width, r.y + r.height);
+            {
+                var color32 = color;
+                vh.AddVert(new Vector3(v.x, v.y), color32, new Vector2(0f, 0f));
+                vh.AddVert(new Vector3(v.x, v.w), color32, new Vector2(0f, 1f));
+                vh.AddVert(new Vector3(v.z, v.w), color32, new Vector2(1f, 1f));
+                vh.AddVert(new Vector3(v.z, v.y), color32, new Vector2(1f, 0f));
+
+                vh.AddTriangle(0, 1, 2);
+                vh.AddTriangle(2, 3, 0);
+            }
+        }
+    }
+
+    protected override void OnDidApplyAnimationProperties()
+    {
+        SetMaterialDirty();
+        SetVerticesDirty();
+    }
+}
+
+/*
 public class CamInputDisplay : MonoBehaviour
 {
-    public GameObject pointPrefab;
     public int camInputIndex = 0;
 
     RawImage rawImage;
@@ -16,6 +94,10 @@ public class CamInputDisplay : MonoBehaviour
     Image[,] pointObjects;
     bool on = false;
 
+    public void Init()
+    {
+        
+    }
     private void Awake()
     {
         rawImage = GetComponent<RawImage>();
@@ -24,9 +106,9 @@ public class CamInputDisplay : MonoBehaviour
     }
     private void Update()
     {
+        if (!CamInputManager.Instance.camInputs[camInputIndex].Active) return;
         if (on)
         {
-            print(CamInputManager.Instance.camInputs[camInputIndex].markingsUpdateMethod);
             if (fitter != null && rawImage.texture != null)
                 fitter.aspectRatio = (float)rawImage.texture.width / rawImage.texture.height;
             if (Input.GetKeyDown(KeyCode.Return))
@@ -68,7 +150,7 @@ public class CamInputDisplay : MonoBehaviour
         }
         else
         {
-            if (CamInputManager.Instance.camInputs.Count > camInputIndex)
+            if (CamInputManager.Instance.camInputs.Length > camInputIndex)
             {
                 on = true;
                 rawImage.texture = CamInputManager.Instance.camInputs[camInputIndex].Texture;
@@ -113,4 +195,4 @@ public class CamInputDisplay : MonoBehaviour
             CamInputManager.Instance.camInputs[camInputIndex].markingsUpdateMethod = (MarkingsUpdateMethod)value;
         }
     }
-}
+}*/

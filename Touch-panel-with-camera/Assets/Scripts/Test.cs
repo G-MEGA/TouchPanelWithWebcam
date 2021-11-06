@@ -29,12 +29,6 @@ public class Test : MonoBehaviour
         }
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            WebCamDevice[] webCamDevices = WebCamTexture.devices;
-            //Vector2 bottomLeft = new Vector2(0f,0f);
-            //Vector2 topRight = new Vector2(1f,1f);
-            Vector2 bottomLeft = new Vector2(0f,0f);
-            Vector2 topRight = new Vector2(1f,1f);
-            CamInputManager.Instance.camInputs[0].Init(webCamDevices[0].name, new Vector2(bottomLeft.x, topRight.y), topRight, bottomLeft, new Vector2(topRight.x, bottomLeft.y));
             rawImage.texture = CamInputManager.Instance.camInputs[0].Texture;
             print(rectTransform.sizeDelta);
         }

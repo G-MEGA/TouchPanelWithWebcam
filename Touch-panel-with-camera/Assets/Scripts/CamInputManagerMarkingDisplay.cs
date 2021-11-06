@@ -47,7 +47,7 @@ public class CamInputManagerMarkingDisplay : MonoBehaviour
         }
         else
         {
-            int canInputsCount = CamInputManager.Instance.camInputs.Count;
+            int canInputsCount = CamInputManager.Instance.camInputs.Length;
             for (int i = 0; i < width; i++)
             {
                 for (int j = 0; j < height; j++)

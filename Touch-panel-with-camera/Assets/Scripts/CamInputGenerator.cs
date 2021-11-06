@@ -21,17 +21,10 @@ public class CamInputGenerator : MonoBehaviour
     AspectRatioFitter rawImageFitter;
 
     int index = -1;
-    WebCamDevice[] webCamDevices;
-    WebCamTexture[] webCamTextures;
 
     void Start()
     {
         rawImageFitter = rawImage.GetComponent<AspectRatioFitter>();
-
-        webCamDevices = WebCamTexture.devices;
-        webCamTextures = new WebCamTexture[webCamDevices.Length];
-        for (int i = 0; i < webCamTextures.Length; i++)
-            webCamTextures[i] = new WebCamTexture(webCamDevices[i].name);
     }
     private void Update()
     {
@@ -149,25 +142,21 @@ public class CamInputGenerator : MonoBehaviour
     {
         if(index != -1)
         {
-            int i = CamInputManager.Instance.camInputs.Count;
-            CamInputManager.Instance.camInputs.Add(new CamInput());
-            CamInputManager.Instance.camInputs[i].Init(webCamTextures[index], 
-                new Vector2(float.Parse(FL_x.text), float.Parse(FL_y.text)), 
-                new Vector2(float.Parse(FR_x.text), float.Parse(FR_y.text)),
-                new Vector2(float.Parse(BL_x.text), float.Parse(BL_y.text)),
-                new Vector2(float.Parse(BR_x.text), float.Parse(BR_y.text)));
+            CamInputManager.Instance.camInputs[index].FL = new Vector2(float.Parse(FL_x.text), float.Parse(FL_y.text));
+            CamInputManager.Instance.camInputs[index].FR = new Vector2(float.Parse(FR_x.text), float.Parse(FR_y.text));
+            CamInputManager.Instance.camInputs[index].BL = new Vector2(float.Parse(BL_x.text), float.Parse(BL_y.text));
+            CamInputManager.Instance.camInputs[index].BR = new Vector2(float.Parse(BR_x.text), float.Parse(BR_y.text));
         }
     }
     public void Next()
     {
         index++;
-        if (index >= webCamDevices.Length)
+        if (index >= CamInputManager.Instance.camInputs.Length)
             index = 0;
-        if (!webCamTextures[index].isPlaying)
+        rawImage.texture = CamInputManager.Instance.camInputs[index].Texture;
+        if (!CamInputManager.Instance.camInputs[index].Active)
         {
-            webCamTextures[index].Play();
-            print(webCamTextures[index].isPlaying);
+            CamInputManager.Instance.camInputs[index].Active = true;
         }
-        rawImage.texture = webCamTextures[index];
     }
 }
