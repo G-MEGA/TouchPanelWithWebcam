@@ -112,7 +112,7 @@ public class CamInputManager : MonoBehaviour
     {
         int camInputCount = camInputs.Length;
         for (int i = 0; i < camInputCount; i++)
-            if (camInputs[i].Active)
+            if (camInputs[i].Active && webCams[i].didUpdateThisFrame)
                 camInputs[i].MarkingsUpdate();
         int temp;
         for (int i = 0; i < resolution.x; i++)

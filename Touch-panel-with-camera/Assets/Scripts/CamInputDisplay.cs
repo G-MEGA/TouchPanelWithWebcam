@@ -11,6 +11,8 @@ public class CamInputDisplay : MaskableGraphic
     Texture m_Texture;
     CamInput camInput;
     Texture2D markingTexture;
+    int textureWidthCache;
+    int textureHeightCache;
     int index;
 
     Color[] colors;
@@ -55,6 +57,8 @@ public class CamInputDisplay : MaskableGraphic
         markingTexture = new Texture2D(CamInputManager.Instance.Resolution.x, CamInputManager.Instance.Resolution.y);
         texture = markingTexture;
         markingTexture.filterMode = FilterMode.Point;
+        textureWidthCache = markingTexture.width;
+        textureHeightCache = markingTexture.height;
         colors = new Color[CamInputManager.Instance.Resolution.x* CamInputManager.Instance.Resolution.y];
     }
     void OnMarkingPositionsChanged()
@@ -67,31 +71,31 @@ public class CamInputDisplay : MaskableGraphic
     {
         if (camInput != null&& camInput.Active)
         {
-            for (int i = 0; i < texture.width; i++)
+            for (int i = 0; i < textureWidthCache; i++)
             {
-                for (int j = 0; j < texture.height; j++)
+                for (int j = 0; j < textureHeightCache; j++)
                 {
                     if (mode == CamInputDisplayMode.SolidColor)
                     {
                         switch (index)
                         {
                             case 0:
-                                colors[i + texture.width * j] = Color.red;
+                                colors[i + textureWidthCache * j] = Color.red;
                                 break;
                             case 1:
-                                colors[i + texture.width * j] = Color.green;
+                                colors[i + textureWidthCache * j] = Color.green;
                                 break;
                             case 2:
-                                colors[i + texture.width * j] = Color.blue;
+                                colors[i + textureWidthCache * j] = Color.blue;
                                 break;
                             case 3:
-                                colors[i + texture.width * j] = Color.cyan;
+                                colors[i + textureWidthCache * j] = Color.cyan;
                                 break;
                             case 4:
-                                colors[i + texture.width * j] = Color.magenta;
+                                colors[i + textureWidthCache * j] = Color.magenta;
                                 break;
                             case 5:
-                                colors[i + texture.width * j] = Color.yellow;
+                                colors[i + textureWidthCache * j] = Color.yellow;
                                 break;
                         }
                     }
@@ -102,22 +106,22 @@ public class CamInputDisplay : MaskableGraphic
                             switch (index)
                             {
                                 case 0:
-                                    colors[i + texture.width * j] = Color.red;
+                                    colors[i + textureWidthCache * j] = Color.red;
                                     break;
                                 case 1:
-                                    colors[i + texture.width * j] = Color.green;
+                                    colors[i + textureWidthCache * j] = Color.green;
                                     break;
                                 case 2:
-                                    colors[i + texture.width * j] = Color.blue;
+                                    colors[i + textureWidthCache * j] = Color.blue;
                                     break;
                                 case 3:
-                                    colors[i + texture.width * j] = Color.cyan;
+                                    colors[i + textureWidthCache * j] = Color.cyan;
                                     break;
                                 case 4:
-                                    colors[i + texture.width * j] = Color.magenta;
+                                    colors[i + textureWidthCache * j] = Color.magenta;
                                     break;
                                 case 5:
-                                    colors[i + texture.width * j] = Color.yellow;
+                                    colors[i + textureWidthCache * j] = Color.yellow;
                                     break;
                             }
                         }
@@ -125,11 +129,11 @@ public class CamInputDisplay : MaskableGraphic
                         {
                             if (mode == CamInputDisplayMode.Default)
                             {
-                                colors[i + texture.width * j] = camInput.baseColors[i, j];//기준 색 설정
+                                colors[i + textureWidthCache * j] = camInput.baseColors[i, j];//기준 색 설정
                             }
                             else
                             {
-                                colors[i + texture.width * j] = Color.clear;//기준 색 설정
+                                colors[i + textureWidthCache * j] = Color.clear;//기준 색 설정
                             }
                         }
                     }
@@ -207,119 +211,4 @@ public class CamInputDisplay : MaskableGraphic
         SetVerticesDirty();
     }
 }
-
-/*
-public class CamInputDisplay : MonoBehaviour
-{
-    public int camInputIndex = 0;
-
-    RawImage rawImage;
-    RectTransform rectTransform;
-    AspectRatioFitter fitter;
-
-    Image[,] pointObjects;
-    bool on = false;
-
-    public void Init()
-    {
-        
-    }
-    private void Awake()
-    {
-        rawImage = GetComponent<RawImage>();
-        rectTransform = GetComponent<RectTransform>();
-        fitter = GetComponent<AspectRatioFitter>();
-    }
-    private void Update()
-    {
-        if (!CamInputManager.Instance.camInputs[camInputIndex].Active) return;
-        if (on)
-        {
-            if (fitter != null && rawImage.texture != null)
-                fitter.aspectRatio = (float)rawImage.texture.width / rawImage.texture.height;
-            if (Input.GetKeyDown(KeyCode.Return))
-                CamInputManager.Instance.camInputs[camInputIndex].BaseColorsUpdate();
-            for (int i = 0; i < pointObjects.GetLength(0); i++)
-            {
-                for (int j = 0; j < pointObjects.GetLength(1); j++)
-                {
-                    if (CamInputManager.Instance.camInputs[camInputIndex].markings[i, j])
-                    {
-                        switch (camInputIndex)
-                        {
-                            case 0:
-                                pointObjects[i, j].color = Color.red;
-                                break;
-                            case 1:
-                                pointObjects[i, j].color = Color.green;
-                                break;
-                            case 2:
-                                pointObjects[i, j].color = Color.blue;
-                                break;
-                            case 3:
-                                pointObjects[i, j].color = Color.cyan;
-                                break;
-                            case 4:
-                                pointObjects[i, j].color = Color.magenta;
-                                break;
-                            case 5:
-                                pointObjects[i, j].color = Color.yellow;
-                                break;
-                        }
-                    }
-                    else
-                    {
-                        pointObjects[i, j].color = CamInputManager.Instance.camInputs[camInputIndex].baseColors[i, j];
-                    }
-                }
-            }
-        }
-        else
-        {
-            if (CamInputManager.Instance.camInputs.Length > camInputIndex)
-            {
-                on = true;
-                rawImage.texture = CamInputManager.Instance.camInputs[camInputIndex].Texture;
-
-                if (pointObjects != null)
-                {
-                    for (int i = 0; i < pointObjects.GetLength(0); i++)
-                    {
-                        for (int j = 0; j < pointObjects.GetLength(1); j++)
-                        {
-                            GameObject.Destroy(pointObjects[i, j].gameObject);
-                        }
-                    }
-                }
-
-                pointObjects = new Image[CamInputManager.Instance.Resolution.x, CamInputManager.Instance.Resolution.y];
-
-                int markingLength = CamInputManager.Instance.MarkingLength;
-                for (int i = 0; i < pointObjects.GetLength(0); i++)
-                {
-                    for (int j = 0; j < pointObjects.GetLength(1); j++)
-                    {
-                        pointObjects[i, j] = GameObject.Instantiate(pointPrefab, transform).GetComponent<Image>();
-
-                        Vector2Int pos = CamInputManager.Instance.camInputs[camInputIndex].markingPositions[i * markingLength, j * markingLength];
-                        Vector2Int pos1 = CamInputManager.Instance.camInputs[camInputIndex].markingPositions[i * markingLength + markingLength - 1, j * markingLength + markingLength - 1];
-                        float x = (pos.x + pos1.x) * 0.5f / rawImage.texture.width;
-                        float y = (pos.y + pos1.y) * 0.5f / rawImage.texture.height;
-                        pointObjects[i, j].GetComponent<RectTransform>().anchorMin = new Vector2(x, y);
-                        pointObjects[i, j].GetComponent<RectTransform>().anchorMax = new Vector2(x, y);
-                        pointObjects[i, j].transform.SetAsFirstSibling();
-                    }
-                }
-            }
-        }
-    }
-
-    public void OnMarkingsUpdateMethodChanged(int value)
-    {
-        if (on)
-        {
-            CamInputManager.Instance.camInputs[camInputIndex].markingsUpdateMethod = (MarkingsUpdateMethod)value;
-        }
-    }
-}*/
 public enum CamInputDisplayMode {Default, SolidColor, NoBaseColor}

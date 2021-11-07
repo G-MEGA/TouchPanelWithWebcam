@@ -20,6 +20,9 @@ public class CamInput
                 if (active)
                 {
                     if(!cam.isPlaying) cam.Play();
+                    camPixels = new Color32[cam.width * cam.height];
+                    camWidthCache = cam.width;
+                    camHeightCache = cam.height;
                     MarkingPositionsUpdate();
                 }
                 else
@@ -239,13 +242,13 @@ public class CamInput
             }
         }
     }
-    public Vector2Int[,] markingPositions;//각 요소들은 텍스처상의 위치를 가짐. topLeft,topRight,bottomLeft,bottomRight나 CamInputManager.resolution, markingLength나 active가 바뀌었을때 바뀌어야함
-    public Color[,] baseColors;//바로 위와 같은 조건일때 얘도 바꿔야함. 단, 크기는 markings크기 바꿀때 같이 변경
-    int aabbX;
-    int aabbY;
-    int aabbWidth;
-    int aabbHeight;
-    Color[] camPixels;
+    //public Vector2Int[,] markingPositions;//각 요소들은 텍스처상의 위치를 가짐. topLeft,topRight,bottomLeft,bottomRight나 CamInputManager.resolution, markingLength나 active가 바뀌었을때 바뀌어야함
+    public int[,] markingPositionXs;//각 요소들은 텍스처상의 위치를 가짐. topLeft,topRight,bottomLeft,bottomRight나 CamInputManager.resolution, markingLength나 active가 바뀌었을때 바뀌어야함
+    public int[,] markingPositionYs;//각 요소들은 텍스처상의 위치를 가짐. topLeft,topRight,bottomLeft,bottomRight나 CamInputManager.resolution, markingLength나 active가 바뀌었을때 바뀌어야함
+    public Color32[,] baseColors;//바로 위와 같은 조건일때 얘도 바꿔야함. 단, 크기는 markings크기 바꿀때 같이 변경
+    Color32[] camPixels;
+    int camWidthCache;
+    int camHeightCache;
 
     public MarkingsUpdateMethod markingsUpdateMethod = MarkingsUpdateMethod.CompareHRGB;//언제든지 바뀌어도 됨
 
@@ -258,8 +261,8 @@ public class CamInput
     {
         if (active)
         {
-            int maxX = cam.width - 1;
-            int maxY = cam.height - 1;
+            int maxX = camWidthCache - 1;
+            int maxY = camHeightCache - 1;
             Vector2 frontLeftNotNormal = new Vector2(maxX * frontLeft.x, maxY * frontLeft.y);
             Vector2 frontRightNotNormal = new Vector2(maxX * frontRight.x, maxY * frontRight.y);
             Vector2 backLeftNotNormal = new Vector2(maxX * backLeft.x, maxY * backLeft.y);
@@ -268,11 +271,12 @@ public class CamInput
             int lengthI = CamInputManager.Instance.Resolution.y * CamInputManager.Instance.MarkingLength;
             int lengthJ = CamInputManager.Instance.Resolution.x * CamInputManager.Instance.MarkingLength;
 
-            markingPositions = new Vector2Int[lengthJ, lengthI];
+            //markingPositions = new Vector2Int[lengthJ, lengthI];
+            markingPositionXs = new int[lengthJ, lengthI];
+            markingPositionYs = new int[lengthJ, lengthI];
 
             Vector2 leftSide, rightSide, temp;
             float iRatio;
-            int positionMaxX = 0, positionMaxY = 0, positionMinX = maxX, positionMinY = maxY;
             for (int i = 0; i < lengthI; i++)
             {
                 iRatio = (float)i / (lengthI - 1);
@@ -281,31 +285,12 @@ public class CamInput
                 for (int j = 0; j < lengthJ; j++)
                 {
                     temp = Vector2.Lerp(leftSide, rightSide, (float)j / (lengthJ - 1));
-                    markingPositions[j, i].x = Mathf.RoundToInt(temp.x);
-                    markingPositions[j, i].y = Mathf.RoundToInt(temp.y);
-
-                    if(positionMinX > markingPositions[j, i].x)
-                        positionMinX = markingPositions[j, i].x;
-                    if (positionMinY > markingPositions[j, i].y)
-                        positionMinY = markingPositions[j, i].y;
-                    if (positionMaxX < markingPositions[j, i].x)
-                        positionMaxX = markingPositions[j, i].x;
-                    if (positionMaxY < markingPositions[j, i].y)
-                        positionMaxY = markingPositions[j, i].y;
+                    //markingPositions[j, i].x = Mathf.RoundToInt(temp.x);
+                    //markingPositions[j, i].y = Mathf.RoundToInt(temp.y);
+                    markingPositionXs[j, i] = Mathf.RoundToInt(temp.x);
+                    markingPositionYs[j, i] = Mathf.RoundToInt(temp.y);
                 }
             }
-            for (int i = 0; i < lengthI; i++)
-            {
-                for (int j = 0; j < lengthJ; j++)
-                {
-                    markingPositions[j, i].x -= positionMinX;
-                    markingPositions[j, i].y -= positionMinY;
-                }
-            }
-            aabbX = positionMinX;
-            aabbY = positionMinY;
-            aabbWidth = positionMaxX - positionMinX + 1;
-            aabbHeight = positionMaxY - positionMinY + 1;
 
             BaseColorsUpdate();
             MarkingPositionsChanged?.Invoke();
@@ -317,9 +302,9 @@ public class CamInput
         int lengthI = CamInputManager.Instance.Resolution.x;
         int lengthJ = CamInputManager.Instance.Resolution.y;
         int markingLength = CamInputManager.Instance.MarkingLength;
-        Color[] colors = new Color[markingLength * markingLength];
-        camPixels = cam.GetPixels(aabbX,aabbY,aabbWidth,aabbHeight);
-        Vector2Int pos;
+        Color32[] colors = new Color32[markingLength * markingLength];
+        cam.GetPixels32(camPixels);
+        //Vector2Int pos;
         int m;
 
         for (int i = 0; i < lengthI; i++)
@@ -331,8 +316,9 @@ public class CamInput
                 {
                     for (int n = 0; n < markingLength; n++)
                     {
-                        pos = markingPositions[i * markingLength + k, j * markingLength + n];
-                        colors[m] = camPixels[pos.x + pos.y* aabbWidth];
+                        //pos = markingPositions[i * markingLength + k, j * markingLength + n];
+                        //colors[m] = camPixels[pos.x + pos.y* camWidthCache];
+                        colors[m] = camPixels[markingPositionXs[i * markingLength + k, j * markingLength + n] + markingPositionYs[i * markingLength + k, j * markingLength + n] * camWidthCache];
                         m++;
                     }
                 }
@@ -340,21 +326,20 @@ public class CamInput
             }
         }
     }
-    Color ColorAverage(params Color[] colors)
+    Color32 ColorAverage(params Color32[] colors)
     {
-        float r = 0f, g = 0f, b = 0f;
+        int r = 0, g = 0, b = 0;
         for (int i = 0; i < colors.Length; i++)
         {
             r += colors[i].r;
             g += colors[i].g;
             b += colors[i].b;
         }
-        float inverseLength = 1f / colors.Length;
-        r *= inverseLength;
-        g *= inverseLength;
-        b *= inverseLength;
-
-        return new Color(r, g, b);
+        r /= colors.Length;
+        g /= colors.Length;
+        b /= colors.Length;
+        
+        return new Color32((byte)r, (byte)g, (byte)b, 255);
     }
     Vector2 PointOnBezierCurve3(float t,Vector2 start,Vector2 p1, Vector2 p2, Vector3 dst)
     {
@@ -370,7 +355,7 @@ public class CamInput
     public void ResolutionChanged()
     {
         markings = new bool[CamInputManager.Instance.Resolution.x, CamInputManager.Instance.Resolution.y];
-        baseColors = new Color[CamInputManager.Instance.Resolution.x, CamInputManager.Instance.Resolution.y];
+        baseColors = new Color32[CamInputManager.Instance.Resolution.x, CamInputManager.Instance.Resolution.y];
         MarkingPositionsUpdate();
     }
     public void MarkingLengthChanged()
@@ -378,7 +363,7 @@ public class CamInput
         MarkingPositionsUpdate();
     }
 
-    public void MarkingsUpdate()//아마도 매 프레임마다 호출?
+    public void MarkingsUpdate()//웹캠 텍스쳐가 업데이트 되었을때만 매니저에서 호출
     {
         int width = CamInputManager.Instance.Resolution.x;
         int height = CamInputManager.Instance.Resolution.y;
@@ -388,9 +373,9 @@ public class CamInput
             markings = new bool[width, height];
         }
 
-        Color[] colors = new Color[markingLength * markingLength];
-        Color currentColor;
-        Vector2Int pos;
+        Color32[] colors = new Color32[markingLength * markingLength];
+        Color32 currentColor;
+        //Vector2Int pos;
         int m;
         float h, s, v;
         float currentH, currentS, currentV;
@@ -400,7 +385,7 @@ public class CamInput
         float deltaG;
         float deltaB;
         float sqrRGBDistance;
-        camPixels = cam.GetPixels(aabbX, aabbY, aabbWidth, aabbHeight);
+        cam.GetPixels32(camPixels);
 
         for (int i = 0; i < width; i++)
         {
@@ -411,8 +396,9 @@ public class CamInput
                 {
                     for (int n = 0; n < markingLength; n++)
                     {
-                        pos = markingPositions[i * markingLength + k, j * markingLength + n];
-                        colors[m] = camPixels[pos.x + pos.y * aabbWidth];
+                        //pos = markingPositions[i * markingLength + k, j * markingLength + n];
+                        //colors[m] = camPixels[pos.x + pos.y *camWidthCache];
+                        colors[m] = camPixels[markingPositionXs[i * markingLength + k, j * markingLength + n] + markingPositionYs[i * markingLength + k, j * markingLength + n] * camWidthCache];
                         m++;
                     }
                 }
