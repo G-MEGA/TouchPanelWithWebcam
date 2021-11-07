@@ -9,8 +9,11 @@ public class TouchDisplay : MonoBehaviour
     AspectRatioFitter fitter;
     RawImage image;
     Texture2D texture;
+    CamInputManager manager;
     private void Start()
     {
+
+        manager = CamInputManager.Instance;
 
         fitter = GetComponent<AspectRatioFitter>();
 
@@ -18,19 +21,19 @@ public class TouchDisplay : MonoBehaviour
         image.uvRect = new Rect(0f,1f,1f,-1f);
 
         OnResolutionChanged();
-        CamInputManager.Instance.ResolutionChanged += OnResolutionChanged;
+        manager.ResolutionChanged += OnResolutionChanged;
     }
     private void OnDestroy()
     {
-        CamInputManager.Instance.ResolutionChanged -= OnResolutionChanged;
+        manager.ResolutionChanged -= OnResolutionChanged;
     }
     int activeCaminputCount;
     Color[] colors;
     private void Update()
     {
         activeCaminputCount = 0;
-        for (int i = 0; i < CamInputManager.Instance.camInputs.Length; i++)
-            if (CamInputManager.Instance.camInputs[i].Active) activeCaminputCount++;
+        for (int i = 0; i < manager.camInputs.Length; i++)
+            if (manager.camInputs[i].Active) activeCaminputCount++;
 
         if (activeCaminputCount > 0)
         {
@@ -38,16 +41,16 @@ public class TouchDisplay : MonoBehaviour
             {
                 for (int j = 0; j < texture.height; j++)
                 {
-                    if (CamInputManager.Instance.markings[i, j] == activeCaminputCount)
+                    if (manager.markings[i, j] == activeCaminputCount)
                         colors[i + texture.width * j] = Color.white;
                     else
                     {
                         int k;
-                        for (k = 0; k < CamInputManager.Instance.camInputs.Length; k++)
+                        for (k = 0; k < manager.camInputs.Length; k++)
                         {
-                            if (!CamInputManager.Instance.camInputs[k].Active)
+                            if (!manager.camInputs[k].Active)
                                 continue;
-                            if (CamInputManager.Instance.camInputs[k].markings[i, j])
+                            if (manager.camInputs[k].markings[i, j])
                             {
                                 switch (k)
                                 {
@@ -73,7 +76,7 @@ public class TouchDisplay : MonoBehaviour
                                 break;
                             }
                         }
-                        if (k == CamInputManager.Instance.camInputs.Length) colors[i + texture.width * j] = Color.black;
+                        if (k == manager.camInputs.Length) colors[i + texture.width * j] = Color.black;
                     }
                 }
             }
@@ -88,10 +91,10 @@ public class TouchDisplay : MonoBehaviour
 
     private void OnResolutionChanged()
     {
-        texture = new Texture2D(CamInputManager.Instance.Resolution.x, CamInputManager.Instance.Resolution.y);
+        texture = new Texture2D(manager.Resolution.x, manager.Resolution.y);
         texture.filterMode = FilterMode.Point;
         image.texture = texture;
         fitter.aspectRatio = (float)texture.width / texture.height;
-        colors = new Color[CamInputManager.Instance.Resolution.x * CamInputManager.Instance.Resolution.y];
+        colors = new Color[manager.Resolution.x * manager.Resolution.y];
     }
 }

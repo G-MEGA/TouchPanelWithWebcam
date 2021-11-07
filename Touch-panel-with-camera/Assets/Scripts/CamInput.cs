@@ -245,6 +245,7 @@ public class CamInput
     int aabbY;
     int aabbWidth;
     int aabbHeight;
+    Color[] camPixels;
 
     public MarkingsUpdateMethod markingsUpdateMethod = MarkingsUpdateMethod.CompareHRGB;//언제든지 바뀌어도 됨
 
@@ -307,16 +308,17 @@ public class CamInput
             aabbHeight = positionMaxY - positionMinY + 1;
 
             BaseColorsUpdate();
+            MarkingPositionsChanged?.Invoke();
         }
     }
+    public Changed MarkingPositionsChanged;
     public void BaseColorsUpdate()
     {
         int lengthI = CamInputManager.Instance.Resolution.x;
         int lengthJ = CamInputManager.Instance.Resolution.y;
         int markingLength = CamInputManager.Instance.MarkingLength;
-
         Color[] colors = new Color[markingLength * markingLength];
-        Color[] camPixels = cam.GetPixels(aabbX,aabbY,aabbWidth,aabbHeight);
+        camPixels = cam.GetPixels(aabbX,aabbY,aabbWidth,aabbHeight);
         Vector2Int pos;
         int m;
 
@@ -376,9 +378,6 @@ public class CamInput
         MarkingPositionsUpdate();
     }
 
-
-
-
     public void MarkingsUpdate()//아마도 매 프레임마다 호출?
     {
         int width = CamInputManager.Instance.Resolution.x;
@@ -401,7 +400,7 @@ public class CamInput
         float deltaG;
         float deltaB;
         float sqrRGBDistance;
-        Color[] camPixels = cam.GetPixels(aabbX, aabbY, aabbWidth, aabbHeight);
+        camPixels = cam.GetPixels(aabbX, aabbY, aabbWidth, aabbHeight);
 
         for (int i = 0; i < width; i++)
         {

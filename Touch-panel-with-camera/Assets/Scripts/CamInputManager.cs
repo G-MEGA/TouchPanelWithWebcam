@@ -107,47 +107,27 @@ public class CamInputManager : MonoBehaviour
             webCamNames[i] = webCamDevices[i].name;
             camInputs[i] = new CamInput(webCams[i]);
         }
-
-        StartCoroutine(MarkingsUpdate());
-    }
-    IEnumerator MarkingsUpdate()
-    {
-        while (true)
-        {
-            yield return new WaitForFixedUpdate();
-            yield return new WaitForFixedUpdate();
-            int camInputCount = camInputs.Length;
-            for (int i = 0; i < camInputCount; i++)
-                if (camInputs[i].Active)
-                    camInputs[i].MarkingsUpdate();
-            int temp;
-            for (int i = 0; i < resolution.x; i++)
-            {
-                for (int j = 0; j < resolution.y; j++)
-                {
-                    temp = 0;
-                    for (int k = 0; k < camInputCount; k++)
-                    {
-                        if (camInputs[k].markings[i, j])
-                            temp++;
-                    }
-                    markings[i, j] = temp;
-                }
-            }
-        }
     }
     private void Update()
     {
-        //Test
-        if (Input.GetKeyDown(KeyCode.Keypad0))
+        int camInputCount = camInputs.Length;
+        for (int i = 0; i < camInputCount; i++)
+            if (camInputs[i].Active)
+                camInputs[i].MarkingsUpdate();
+        int temp;
+        for (int i = 0; i < resolution.x; i++)
         {
-            camInputs[0].Active = !camInputs[0].Active;
-        }
-        if (Input.GetKeyDown(KeyCode.KeypadEnter))
-        {
-            CamInputManager.Instance.camInputs[0].BaseColorsUpdate();
+            for (int j = 0; j < resolution.y; j++)
+            {
+                temp = 0;
+                for (int k = 0; k < camInputCount; k++)
+                {
+                    if (camInputs[k].markings[i, j])
+                        temp++;
+                }
+                markings[i, j] = temp;
+            }
         }
     }
-
 }
 public delegate void Changed();

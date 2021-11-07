@@ -2,15 +2,24 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 [RequireComponent(typeof(AspectRatioFitter),typeof(RawImage))]
-public class CamInputWebcamDisplay : MonoBehaviour
+public class CamInputWebcamDisplay : MonoBehaviour, IPointerClickHandler
 {
     [SerializeField]
     Text nameText;
     [SerializeField]
     CamInputDisplay camInputDisplay;
+    public CamInputDisplay CamInputDisplay
+    {
+        get
+        {
+            return camInputDisplay;
+        }
+    }
     WebCamTexture cam;
+    int index;
 
     AspectRatioFitter fitter;
     RawImage image;
@@ -18,8 +27,9 @@ public class CamInputWebcamDisplay : MonoBehaviour
     public void Init(int camInputIndex)
     {
         cam = CamInputManager.Instance.webCams[camInputIndex];
+        index = camInputIndex;
 
-        if(fitter == null)
+        if (fitter == null)
             fitter = GetComponent<AspectRatioFitter>();
         image = GetComponent<RawImage>();
 
@@ -54,4 +64,14 @@ public class CamInputWebcamDisplay : MonoBehaviour
             prevIsPlaying = cam.isPlaying;
         }
     }
+
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        Click?.Invoke(index);
+        ClickAndPointerEventData?.Invoke(eventData);
+    }
+    public WithID Click;
+    public WithPointerEvent ClickAndPointerEventData;
 }
+public delegate void WithID(int id);
+public delegate void WithPointerEvent(PointerEventData eventData);

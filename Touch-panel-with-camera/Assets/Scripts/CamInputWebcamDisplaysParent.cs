@@ -6,6 +6,8 @@ public class CamInputWebcamDisplaysParent : MonoBehaviour
 {
     [SerializeField]
     private GameObject CamInputWebcamDisplayPrefab;
+    [SerializeField]
+    private CamInputSettingWindow settingWindow;
 
     void Start()
     {
@@ -13,10 +15,14 @@ public class CamInputWebcamDisplaysParent : MonoBehaviour
         {
             CamInputWebcamDisplay display = Instantiate(CamInputWebcamDisplayPrefab, transform).GetComponent<CamInputWebcamDisplay>();
             display.Init(i);
+            display.Click += OnDisplayClick;
         }
     }
-    private void Update()
+    void OnDisplayClick(int index)
     {
-        
+        if(settingWindow != null)
+        {
+            settingWindow.StartSetting(index);
+        }
     }
 }
