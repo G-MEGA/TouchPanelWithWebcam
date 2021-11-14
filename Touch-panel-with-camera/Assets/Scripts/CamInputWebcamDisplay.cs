@@ -5,12 +5,19 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
 [RequireComponent(typeof(AspectRatioFitter),typeof(RawImage))]
-public class CamInputWebcamDisplay : MonoBehaviour, IPointerClickHandler
+public class CamInputWebcamDisplay : MonoBehaviour, IPointerDownHandler
 {
     [SerializeField]
     Text nameText;
     [SerializeField]
     CamInputDisplay camInputDisplay;
+    [SerializeField]
+    Slider focusX;
+    [SerializeField]
+    Slider focusY;
+    [SerializeField]
+    GameObject[] ignorePointerEvent;
+
     public CamInputDisplay CamInputDisplay
     {
         get
@@ -38,9 +45,19 @@ public class CamInputWebcamDisplay : MonoBehaviour, IPointerClickHandler
         fitter.aspectRatio = 3f;
 
         if(nameText != null)
-            nameText.text = CamInputManager.Instance.webCamNames[camInputIndex];
+            nameText.text = CamInputManager.Instance.webCamNames[index];
         if (camInputDisplay != null)
-            camInputDisplay.Init(camInputIndex);
+            camInputDisplay.Init(index);
+        if (focusX != null)
+        {
+            focusX.value = CamInputManager.Instance.camInputs[index].FocusX;
+            focusX.onValueChanged.AddListener(new UnityEngine.Events.UnityAction<float>(FocusXChange));
+        }
+        if (focusY != null)
+        {
+            focusY.value = CamInputManager.Instance.camInputs[index].FocusY;
+            focusY.onValueChanged.AddListener(new UnityEngine.Events.UnityAction<float>(FocusYChange));
+        }
         prevIsPlaying = false;
     }
     bool prevIsPlaying;
@@ -65,13 +82,30 @@ public class CamInputWebcamDisplay : MonoBehaviour, IPointerClickHandler
         }
     }
 
-    public void OnPointerClick(PointerEventData eventData)
+    public void OnPointerDown(PointerEventData eventData)
     {
+        int length = ignorePointerEvent.Length;
+        for (int i = 0; i < length; i++)
+            if (ignorePointerEvent[i] == eventData.pointerPress)
+                return;
+
         Click?.Invoke(index);
         ClickAndPointerEventData?.Invoke(eventData);
     }
     public WithID Click;
     public WithPointerEvent ClickAndPointerEventData;
+    public void FocusXChange(float value)
+    {
+        CamInputManager.Instance.camInputs[index].FocusX = value;
+        if (focusX != null)
+            focusX.value = CamInputManager.Instance.camInputs[index].FocusX;
+    }
+    public void FocusYChange(float value)
+    {
+        CamInputManager.Instance.camInputs[index].FocusY = value;
+        if (focusY != null)
+            focusY.value = CamInputManager.Instance.camInputs[index].FocusY;
+    }
 }
 public delegate void WithID(int id);
 public delegate void WithPointerEvent(PointerEventData eventData);

@@ -106,6 +106,9 @@ public class CamInputManager : MonoBehaviour
             webCams[i] = new WebCamTexture(webCamDevices[i].name);
             webCamNames[i] = webCamDevices[i].name;
             camInputs[i] = new CamInput(webCams[i]);
+
+            webCams[i].requestedWidth = 1;//웹캠의 해상도를 최대한 작게.
+            webCams[i].requestedHeight = 1;//웹캠의 해상도를 최대한 작게.
         }
     }
     private void Update()

@@ -243,14 +243,72 @@ public class CamInput
         }
     }
     //public Vector2Int[,] markingPositions;//각 요소들은 텍스처상의 위치를 가짐. topLeft,topRight,bottomLeft,bottomRight나 CamInputManager.resolution, markingLength나 active가 바뀌었을때 바뀌어야함
-    public int[,] markingPositionXs;//각 요소들은 텍스처상의 위치를 가짐. topLeft,topRight,bottomLeft,bottomRight나 CamInputManager.resolution, markingLength나 active가 바뀌었을때 바뀌어야함
-    public int[,] markingPositionYs;//각 요소들은 텍스처상의 위치를 가짐. topLeft,topRight,bottomLeft,bottomRight나 CamInputManager.resolution, markingLength나 active가 바뀌었을때 바뀌어야함
+    public int[,] markingPositionXs;//각 요소들은 텍스처상의 위치를 가짐. topLeft,topRight,bottomLeft,bottomRight나 CamInputManager.resolution, markingLength나 active, FocusX, FocusY, FocusPower가 바뀌었을때 바뀌어야함
+    public int[,] markingPositionYs;//각 요소들은 텍스처상의 위치를 가짐. topLeft,topRight,bottomLeft,bottomRight나 CamInputManager.resolution, markingLength나 active, FocusX, FocusY, FocusPower가 바뀌었을때 바뀌어야함
     public Color32[,] baseColors;//바로 위와 같은 조건일때 얘도 바꿔야함. 단, 크기는 markings크기 바꿀때 같이 변경
     Color32[] camPixels;
     int camWidthCache;
     int camHeightCache;
+    public bool negativeWithBaseColor = false;
+    public int allowedRedDeltaWithBaseColor = 25;//0~255
+    public int allowedGreenDeltaWithBaseColor = 25;//0~255
+    public int allowedBlueDeltaWithBaseColor = 25;//0~255
+    public float allowedHueDeltaWithBaseColor = 1f;//0.1f;//0~0.5
+    public float allowedSaturationDeltaWithBaseColor = 0.1f;//0.1f;//0~1
+    public float allowedValueDeltaWithBaseColor = 0.3f;//0.2f;//0~1
+    float focusX = 0f;
+    public float FocusX
+    {
+        get
+        {
+            return focusX;
+        }
+        set
+        {
+            value = Mathf.Clamp(value, -0.5f, 0.5f);
+            if (focusX != value)
+            {
+                focusX = value;
+                MarkingPositionsUpdate();
+            }
+        }
+    }
+    float focusY = 0f;
+    public float FocusY
+    {
+        get
+        {
+            return focusY;
+        }
+        set
+        {
+            value = Mathf.Clamp(value, -0.5f, 0.5f);
+            if (focusY != value) 
+            { 
+                focusY = value;
+                MarkingPositionsUpdate();
+            }
+        }
+    }
+    float focusPower = 1f;
+    public float FocusPower
+    {
+        get
+        {
+            return focusPower;
+        }
+        set
+        {
+            if (focusPower!=value && value > 0f)
+            {
+                focusPower = value;
+                MarkingPositionsUpdate();
+            }
+        }
+    }
+    public List<CustomColor> customColors = new List<CustomColor>();
 
-    public MarkingsUpdateMethod markingsUpdateMethod = MarkingsUpdateMethod.CompareHRGB;//언제든지 바뀌어도 됨
+    public MarkingsUpdateMethod markingsUpdateMethod = MarkingsUpdateMethod.CompareHSV;//언제든지 바뀌어도 됨
 
     public CamInput(WebCamTexture cam)
     {
@@ -271,20 +329,47 @@ public class CamInput
             int lengthI = CamInputManager.Instance.Resolution.y * CamInputManager.Instance.MarkingLength;
             int lengthJ = CamInputManager.Instance.Resolution.x * CamInputManager.Instance.MarkingLength;
 
+            float[] xRatios = new float[lengthJ];
+            for (int j = 0; j < lengthJ; j++)
+            {
+                xRatios[j] = (float)j / (lengthJ - 1);
+
+                xRatios[j] = xRatios[j] * 2f - 1f;
+                if (xRatios[j] > 0f)
+                    xRatios[j] = Mathf.Pow(xRatios[j], focusPower);
+                else if (xRatios[j] < 0f)
+                    xRatios[j] = -(Mathf.Pow(-xRatios[j],focusPower));
+                xRatios[j] = 0.5f + xRatios[j] * 0.5f;
+
+                xRatios[j] += focusX * (1f - Mathf.Abs(0.5f - xRatios[j]) * 2f);
+            }
+            float[] yRatios = new float[lengthI];
+            for (int i = 0; i < lengthI; i++)
+            {
+                yRatios[i] = (float)i / (lengthI - 1);
+
+                yRatios[i] = yRatios[i] * 2f - 1f;
+                if (yRatios[i] > 0f)
+                    yRatios[i] = Mathf.Pow(yRatios[i], focusPower);
+                else if (yRatios[i] < 0f)
+                    yRatios[i] = -(Mathf.Pow(-yRatios[i], focusPower));
+                yRatios[i] = 0.5f + yRatios[i] * 0.5f;
+
+                yRatios[i] += focusY * (1f - Mathf.Abs(0.5f - yRatios[i]) * 2f);
+            }
+
             //markingPositions = new Vector2Int[lengthJ, lengthI];
             markingPositionXs = new int[lengthJ, lengthI];
             markingPositionYs = new int[lengthJ, lengthI];
 
             Vector2 leftSide, rightSide, temp;
-            float iRatio;
             for (int i = 0; i < lengthI; i++)
             {
-                iRatio = (float)i / (lengthI - 1);
-                leftSide = Vector2.Lerp(frontLeftNotNormal, backLeftNotNormal, iRatio);
-                rightSide = Vector2.Lerp(frontRightNotNormal, backRightNotNormal, iRatio);
+                leftSide = Vector2.Lerp(frontLeftNotNormal, backLeftNotNormal, yRatios[i]);
+                rightSide = Vector2.Lerp(frontRightNotNormal, backRightNotNormal, yRatios[i]);
                 for (int j = 0; j < lengthJ; j++)
                 {
-                    temp = Vector2.Lerp(leftSide, rightSide, (float)j / (lengthJ - 1));
+                    temp = Vector2.Lerp(leftSide, rightSide, xRatios[j]);
                     //markingPositions[j, i].x = Mathf.RoundToInt(temp.x);
                     //markingPositions[j, i].y = Mathf.RoundToInt(temp.y);
                     markingPositionXs[j, i] = Mathf.RoundToInt(temp.x);
@@ -299,6 +384,9 @@ public class CamInput
     public Changed MarkingPositionsChanged;
     public void BaseColorsUpdate()
     {
+        if (!Active)
+            return;
+
         int lengthI = CamInputManager.Instance.Resolution.x;
         int lengthJ = CamInputManager.Instance.Resolution.y;
         int markingLength = CamInputManager.Instance.MarkingLength;
@@ -377,14 +465,16 @@ public class CamInput
         Color32 currentColor;
         //Vector2Int pos;
         int m;
+        int customColorsLength = customColors.Count;
+        CustomColor customColor;
         float h, s, v;
         float currentH, currentS, currentV;
         float deltaH;
         float deltaS;
+        float deltaV;
         float deltaR;
         float deltaG;
         float deltaB;
-        float sqrRGBDistance;
         cam.GetPixels32(camPixels);
 
         for (int i = 0; i < width; i++)
@@ -406,58 +496,146 @@ public class CamInput
 
                 switch (markingsUpdateMethod)
                 {
-                    case MarkingsUpdateMethod.CompareH:
+                    case MarkingsUpdateMethod.CompareHSV:
                         Color.RGBToHSV(baseColors[i,j], out h, out s, out v);
                         Color.RGBToHSV(currentColor,out currentH, out currentS, out currentV);
                         deltaH = currentH - h;
-                        
-                        while (deltaH < -0.1f)
+
+                        while (deltaH <= -0.5f)
                             deltaH += 1.0f;
-                        while (deltaH > 0.1f)
+                        while (deltaH > 0.5f)
                             deltaH -= 1.0f;
-                        markings[i, j] = Mathf.Abs(deltaH) > 0.1f;
+
+                        deltaS = currentS - s;
+
+                        deltaV = currentV - v;
+
+                        markings[i, j] = Mathf.Abs(deltaH) > allowedHueDeltaWithBaseColor || Mathf.Abs(deltaS) > allowedSaturationDeltaWithBaseColor || Mathf.Abs(deltaV) > allowedValueDeltaWithBaseColor;
                         break;
                     case MarkingsUpdateMethod.CompareRGB:
-                        deltaR = currentColor.r - baseColors[i, j].r;
-                        deltaG = currentColor.g - baseColors[i, j].g;
-                        deltaB = currentColor.b - baseColors[i, j].b;
-                        sqrRGBDistance = deltaR * deltaR + deltaG * deltaG + deltaB * deltaB;
-                        markings[i, j] = sqrRGBDistance > 0.03f;
+                        //deltaR = currentColor.r - baseColors[i, j].r;
+                        //deltaG = currentColor.g - baseColors[i, j].g;
+                        //deltaB = currentColor.b - baseColors[i, j].b;
+                        //sqrRGBDistance = deltaR * deltaR + deltaG * deltaG + deltaB * deltaB;
+                        //markings[i, j] = sqrRGBDistance > 0.03f;
+                        deltaR = Mathf.Abs(currentColor.r - baseColors[i, j].r);
+                        deltaG = Mathf.Abs(currentColor.g - baseColors[i, j].g);
+                        deltaB = Mathf.Abs(currentColor.b - baseColors[i, j].b);
+                        markings[i, j] = (deltaR > allowedRedDeltaWithBaseColor) || (deltaG > allowedGreenDeltaWithBaseColor) || (deltaB > allowedBlueDeltaWithBaseColor);
                         break;
-                    case MarkingsUpdateMethod.CompareHRGB:
+                    case MarkingsUpdateMethod.CompareHSVAndRGB:
                         Color.RGBToHSV(baseColors[i, j], out h, out s, out v);
                         Color.RGBToHSV(currentColor, out currentH, out currentS, out currentV);
                         deltaH = currentH - h;
 
-                        while (deltaH < -0.1f)
+                        while (deltaH <= -0.5f)
                             deltaH += 1.0f;
-                        while (deltaH > 0.1f)
+                        while (deltaH > 0.5f)
                             deltaH -= 1.0f;
-                        
-                        deltaR = currentColor.r - baseColors[i, j].r;
-                        deltaG = currentColor.g - baseColors[i, j].g;
-                        deltaB = currentColor.b - baseColors[i, j].b;
-                        sqrRGBDistance = deltaR * deltaR + deltaG * deltaG + deltaB * deltaB;
 
-                        markings[i, j] = Mathf.Abs(deltaH) > 0.1f && sqrRGBDistance > 0.03f;
-                        break;
-                    case MarkingsUpdateMethod.CompareS:
-                        Color.RGBToHSV(baseColors[i, j], out h, out s, out v);
-                        Color.RGBToHSV(currentColor, out currentH, out currentS, out currentV);
                         deltaS = currentS - s;
 
-                        markings[i, j] = Mathf.Abs(deltaS) > 0.1f;
+                        deltaV = currentV - v;
+
+                        deltaR = Mathf.Abs(currentColor.r - baseColors[i, j].r);
+                        deltaG = Mathf.Abs(currentColor.g - baseColors[i, j].g);
+                        deltaB = Mathf.Abs(currentColor.b - baseColors[i, j].b);
+
+                        markings[i, j] = Mathf.Abs(deltaH) > allowedHueDeltaWithBaseColor || Mathf.Abs(deltaS) > allowedSaturationDeltaWithBaseColor || Mathf.Abs(deltaV) > allowedValueDeltaWithBaseColor && (deltaR > allowedRedDeltaWithBaseColor) || (deltaG > allowedGreenDeltaWithBaseColor) || (deltaB > allowedBlueDeltaWithBaseColor);
+                        break;
+                    case MarkingsUpdateMethod.None:
+                        markings[i, j] = false;
                         break;
                     default:
                         break;
+                }
+                if (negativeWithBaseColor)
+                    markings[i, j] = !markings[i, j];
+
+                //baseColor를 이용한 마킹판정과는 or연산이므로 markings[i, j]가 false면 실행
+                if (!markings[i, j])
+                {
+                    //각 색들도 서로 or이므로 true가 나오는 즉시 break
+                    for (int k = 0; k < customColorsLength; k++)
+                    {
+                        customColor = customColors[k]; 
+
+                        switch (customColor.markingsUpdateMethod)
+                        {
+                            case MarkingsUpdateMethod.CompareHSV:
+                                Color.RGBToHSV(customColor.color, out h, out s, out v);
+                                Color.RGBToHSV(currentColor, out currentH, out currentS, out currentV);
+                                deltaH = currentH - h;
+
+                                while (deltaH <= -0.5f)
+                                    deltaH += 1.0f;
+                                while (deltaH > 0.5f)
+                                    deltaH -= 1.0f;
+
+                                deltaS = currentS - s;
+
+                                deltaV = currentV - v;
+
+                                markings[i, j] = Mathf.Abs(deltaH) <= allowedHueDeltaWithBaseColor && Mathf.Abs(deltaS) <= allowedSaturationDeltaWithBaseColor && Mathf.Abs(deltaV) <= allowedValueDeltaWithBaseColor;
+                                break;
+                            case MarkingsUpdateMethod.CompareRGB:
+                                deltaR = Mathf.Abs(currentColor.r - customColor.color.r);
+                                deltaG = Mathf.Abs(currentColor.g - customColor.color.g);
+                                deltaB = Mathf.Abs(currentColor.b - customColor.color.b);
+                                markings[i, j] = (deltaR <= allowedRedDeltaWithBaseColor) && (deltaG <= allowedGreenDeltaWithBaseColor) && (deltaB <= allowedBlueDeltaWithBaseColor);
+                                break;
+                            case MarkingsUpdateMethod.CompareHSVAndRGB:
+                                Color.RGBToHSV(customColor.color, out h, out s, out v);
+                                Color.RGBToHSV(currentColor, out currentH, out currentS, out currentV);
+                                deltaH = currentH - h;
+
+                                while (deltaH <= -0.5f)
+                                    deltaH += 1.0f;
+                                while (deltaH > 0.5f)
+                                    deltaH -= 1.0f;
+
+                                deltaS = currentS - s;
+
+                                deltaV = currentV - v;
+
+                                deltaR = Mathf.Abs(currentColor.r - customColor.color.r);
+                                deltaG = Mathf.Abs(currentColor.g - customColor.color.g);
+                                deltaB = Mathf.Abs(currentColor.b - customColor.color.b);
+
+                                markings[i, j] = Mathf.Abs(deltaH) <= allowedHueDeltaWithBaseColor && Mathf.Abs(deltaS) <= allowedSaturationDeltaWithBaseColor && Mathf.Abs(deltaV) <= allowedValueDeltaWithBaseColor || (deltaR <= allowedRedDeltaWithBaseColor) && (deltaG <= allowedGreenDeltaWithBaseColor) && (deltaB <= allowedBlueDeltaWithBaseColor);
+                                break;
+                            case MarkingsUpdateMethod.None:
+                                markings[i, j] = false;
+                                break;
+                            default:
+                                break;
+                        }
+                        if (customColor.negative)
+                            markings[i, j] = !markings[i, j];
+                        if (markings[i, j])
+                            break;
+                    }
                 }
             }
         }
     }
 
 }
+public class CustomColor
+{
+    public Color32 color;
 
+    public bool negative = false;
+    public int allowedRedDelta = 25;//0~255
+    public int allowedGreenDelta = 25;//0~255
+    public int allowedBlueDelta = 25;//0~255
+    public float allowedHueDelta = 0.1f;//0~0.5
+    public float allowedSaturationDelta = 1f;//0~1
+    public float allowedValueDelta = 1f;//0~1
+    public MarkingsUpdateMethod markingsUpdateMethod = MarkingsUpdateMethod.CompareHSVAndRGB;//언제든지 바뀌어도 됨
+
+}
 public enum MarkingsUpdateMethod
 {
-    CompareH, CompareRGB, CompareHRGB, CompareS
+    CompareHSV, CompareRGB, CompareHSVAndRGB, None
 }
