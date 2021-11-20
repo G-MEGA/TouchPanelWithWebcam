@@ -66,8 +66,27 @@ public class CamInputManager : MonoBehaviour
             }
         }
     }
+    public bool removeGhostWhen2Cam = true;//활성화된 카메라가 2대밖에 없을 때 고스트 터치 제거를 실행하는가
+    public bool RemoveGhostActive
+    {
+        get
+        {
+            return removeGhostWhen2Cam && ActiveCamInputCount == 2;
+        }
+    }
+
     public int[,] markings = new int[0,0];
     public CamInput[] camInputs;
+    public int ActiveCamInputCount
+    {
+        get
+        {
+            int count = 0;
+            for (int i = 0; i < camInputs.Length; i++)
+                if (camInputs[i].Active) count++;
+            return count;
+        }
+    }
     public WebCamTexture[] webCams;
     public string[] webCamNames;
 

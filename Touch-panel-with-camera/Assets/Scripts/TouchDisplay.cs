@@ -31,9 +31,7 @@ public class TouchDisplay : MonoBehaviour
     Color[] colors;
     private void Update()
     {
-        activeCaminputCount = 0;
-        for (int i = 0; i < manager.camInputs.Length; i++)
-            if (manager.camInputs[i].Active) activeCaminputCount++;
+        activeCaminputCount = manager.ActiveCamInputCount;
 
         if (activeCaminputCount > 0)
         {
@@ -78,6 +76,37 @@ public class TouchDisplay : MonoBehaviour
                         }
                         if (k == manager.camInputs.Length) colors[i + texture.width * j] = Color.black;
                     }
+                    //test
+                    for (int k = 0; k < manager.camInputs.Length; k++)
+                    {
+                        if (!manager.camInputs[k].Active)
+                            continue;
+                        if (manager.camInputs[k].vertexOfMarkings[i, j] >= 0)
+                        {
+                            switch (manager.camInputs[k].vertexOfMarkings[i, j])
+                            {
+                                case 0:
+                                    colors[i + texture.width * j] = Color.red;
+                                    break;
+                                case 1:
+                                    colors[i + texture.width * j] = Color.green;
+                                    break;
+                                case 2:
+                                    colors[i + texture.width * j] = Color.blue;
+                                    break;
+                                case 3:
+                                    colors[i + texture.width * j] = Color.cyan;
+                                    break;
+                                case 4:
+                                    colors[i + texture.width * j] = Color.magenta;
+                                    break;
+                                case 5:
+                                    colors[i + texture.width * j] = Color.yellow;
+                                    break;
+                            }
+                        }
+                    }
+
                 }
             }
         }

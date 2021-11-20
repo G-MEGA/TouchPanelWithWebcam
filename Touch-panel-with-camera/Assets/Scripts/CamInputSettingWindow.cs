@@ -26,10 +26,14 @@ public class CamInputSettingWindow : MonoBehaviour
     Slider sDelta;
     [SerializeField]
     Slider vDelta;
-
+    [SerializeField]
+    GameObject colorSettingWindowPrefab;
+    [SerializeField]
+    RectTransform colorSettingWindowsParent;
 
     RectTransform webcamDisplayRectTransform;
     CamInput camInput;
+    List<ColorSettingWindow> colorSettingWindows = new List<ColorSettingWindow>();
 
     private void Awake()
     {
@@ -51,7 +55,15 @@ public class CamInputSettingWindow : MonoBehaviour
     {
         camInput = CamInputManager.Instance.camInputs[index];
 
+        ColorSettingWindowsUpdate();
+
         markingUpdateMethod.value = (int)camInput.markingsUpdateMethod;
+        rDelta.gameObject.SetActive(camInput.markingsUpdateMethod == MarkingsUpdateMethod.CompareRGB);
+        gDelta.gameObject.SetActive(camInput.markingsUpdateMethod == MarkingsUpdateMethod.CompareRGB);
+        bDelta.gameObject.SetActive(camInput.markingsUpdateMethod == MarkingsUpdateMethod.CompareRGB);
+        hDelta.gameObject.SetActive(camInput.markingsUpdateMethod == MarkingsUpdateMethod.CompareHSV);
+        sDelta.gameObject.SetActive(camInput.markingsUpdateMethod == MarkingsUpdateMethod.CompareHSV);
+        vDelta.gameObject.SetActive(camInput.markingsUpdateMethod == MarkingsUpdateMethod.CompareHSV);
         rDelta.value = camInput.allowedRedDeltaWithBaseColor;
         gDelta.value = camInput.allowedGreenDeltaWithBaseColor;
         bDelta.value = camInput.allowedBlueDeltaWithBaseColor;
@@ -72,34 +84,48 @@ public class CamInputSettingWindow : MonoBehaviour
     public void MethodChange(int method)
     {
         camInput.markingsUpdateMethod = (MarkingsUpdateMethod)method;
+        markingUpdateMethod.value = (int)camInput.markingsUpdateMethod;
+        rDelta.gameObject.SetActive(camInput.markingsUpdateMethod == MarkingsUpdateMethod.CompareRGB);
+        gDelta.gameObject.SetActive(camInput.markingsUpdateMethod == MarkingsUpdateMethod.CompareRGB);
+        bDelta.gameObject.SetActive(camInput.markingsUpdateMethod == MarkingsUpdateMethod.CompareRGB);
+        hDelta.gameObject.SetActive(camInput.markingsUpdateMethod == MarkingsUpdateMethod.CompareHSV);
+        sDelta.gameObject.SetActive(camInput.markingsUpdateMethod == MarkingsUpdateMethod.CompareHSV);
+        vDelta.gameObject.SetActive(camInput.markingsUpdateMethod == MarkingsUpdateMethod.CompareHSV);
     }
     public void CamInputDisplayModeChange(int mode)
     {
         webcamDisplay.CamInputDisplay.mode = (CamInputDisplayMode)mode;
+        camInputDisplayMode.value = (int)webcamDisplay.CamInputDisplay.mode;
     }
     public void RDeltaChange(float value)
     {
         camInput.allowedRedDeltaWithBaseColor = (int)value;
+        rDelta.value = camInput.allowedRedDeltaWithBaseColor;
     }
     public void GDeltaChange(float value)
     {
         camInput.allowedGreenDeltaWithBaseColor = (int)value;
+        gDelta.value = camInput.allowedGreenDeltaWithBaseColor;
     }
     public void BDeltaChange(float value)
     {
         camInput.allowedBlueDeltaWithBaseColor = (int)value;
+        bDelta.value = camInput.allowedBlueDeltaWithBaseColor;
     }
     public void HDeltaChange(float value)
     {
         camInput.allowedHueDeltaWithBaseColor = value;
+        hDelta.value = camInput.allowedHueDeltaWithBaseColor;
     }
     public void SDeltaChange(float value)
     {
         camInput.allowedSaturationDeltaWithBaseColor = value;
+        sDelta.value = camInput.allowedSaturationDeltaWithBaseColor;
     }
     public void VDeltaChange(float value)
     {
         camInput.allowedValueDeltaWithBaseColor = value;
+        vDelta.value = camInput.allowedValueDeltaWithBaseColor;
     }
 
     public void ToggleCamInputActive()
@@ -130,9 +156,41 @@ public class CamInputSettingWindow : MonoBehaviour
             camInput.BL = vector2;
         else if (Input.GetKey(KeyCode.Alpha4))
             camInput.BR = vector2;
+        else if (Input.GetKey(KeyCode.LeftControl))
+        {
+            if (!camInput.Texture.isPlaying)
+                return;
+            AddCustomColor(camInput.Texture.GetPixel((int)(vector2.x * camInput.Texture.width), (int)(vector2.y * camInput.Texture.height)));
+        }
     }
 
-    bool logActive;
+    void AddCustomColor(Color32 color32)
+    {
+        CustomColor temp = new CustomColor();
+        temp.color = color32;
+        camInput.customColors.Add(temp);
+        ColorSettingWindowsUpdate();
+    }
+    public void RemoveCustomColor(int index)
+    {
+        camInput.customColors.RemoveAt(index);
+        ColorSettingWindowsUpdate();
+    }
+    void ColorSettingWindowsUpdate()
+    {
+        while (camInput.customColors.Count > colorSettingWindows.Count)
+        {
+            ColorSettingWindow temp = Instantiate(colorSettingWindowPrefab, colorSettingWindowsParent).GetComponent<ColorSettingWindow>();
+            temp.Init(colorSettingWindows.Count, this);
+            colorSettingWindows.Add(temp);
+        }
+
+        int length = colorSettingWindows.Count;
+        for (int i = 0; i < length; i++)
+            colorSettingWindows[i].CamInputChange(camInput);
+    }
+
+
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.M))
@@ -166,29 +224,22 @@ public class CamInputSettingWindow : MonoBehaviour
             FinishSetting();
         }
 
-        logActive = false;
-        log.text = "";
         if (Input.GetKey(KeyCode.Alpha1)) {
-            log.text += "현재 Front-Left 꼭짓점의 위치" + camInput.FL.ToString();
-            logActive = true;
+            log.text = "현재 Front-Left 꼭짓점의 위치" + camInput.FL.ToString();
         }
-        if (Input.GetKey(KeyCode.Alpha2))
+        else if (Input.GetKey(KeyCode.Alpha2))
         {
-            log.text += "현재 Front-Right 꼭짓점의 위치" + camInput.FR.ToString();
-            logActive = true;
+            log.text = "현재 Front-Right 꼭짓점의 위치" + camInput.FR.ToString();
         }
-        if (Input.GetKey(KeyCode.Alpha3))
+        else if (Input.GetKey(KeyCode.Alpha3))
         {
-            log.text += "현재 Back-Left 꼭짓점의 위치" + camInput.BL.ToString();
-            logActive = true;
+            log.text = "현재 Back-Left 꼭짓점의 위치" + camInput.BL.ToString();
         }
-        if (Input.GetKey(KeyCode.Alpha4))
+        else if (Input.GetKey(KeyCode.Alpha4))
         {
-            log.text += "현재 Back-Right 꼭짓점의 위치" + camInput.BR.ToString();
-            logActive = true;
+            log.text = "현재 Back-Right 꼭짓점의 위치" + camInput.BR.ToString();
         }
-
-        if(!logActive)
+        else
         {
             log.text = "-단축키- \nM - 색상인식영역 표시 방식 변경 \nEnter - 기준 색상 갱신 \nSpace bar -카메라 활성화 토글 \n1,2,3,4 + 좌클릭 - 색상 인식 영역 지정";
         }
