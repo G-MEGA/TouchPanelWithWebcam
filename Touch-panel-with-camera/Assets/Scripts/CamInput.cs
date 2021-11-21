@@ -321,6 +321,7 @@ public class CamInput
     public int removeSmallArea = 4;//0일시 비활성화
     public bool shadow = true;
     public int vertexArea = 5;
+    public int minGroupArea = 5;
 
     public CamInput(WebCamTexture cam)
     {
@@ -396,6 +397,31 @@ public class CamInput
             int width = CamInputManager.Instance.Resolution.x;
             int height = CamInputManager.Instance.Resolution.y;
             System.Array.Sort<Vector2Int>(markingPositionIndexsSortByY, (a, b) => (markingPositionYs[a.x * markingLengthCache, a.y * markingLengthCache] < markingPositionYs[b.x * markingLengthCache, b.y * markingLengthCache]) ? -1 : 1);
+
+            int nextX, nextY;//주변의 픽셀들을 y값이 낮은 순서대로 정렬
+            float aY, bY;
+            for (int j = 0; j < height; j++)
+                for (int i = 0; i < width; i++)
+                    System.Array.Sort<int[]>(add4HalfFill[i, j], delegate (int[] a, int[] b)
+                    {
+                        nextX = i + a[0];
+                        nextY = j + a[1];
+                        if (nextX < 0 || nextX >= width || nextY < 0 || nextY >= height)//배열 밖으로 나가면 무조건 얘가 앞
+                        {
+                            return -1;
+                        }
+                        aY = markingPositionYs[nextX * markingLengthCache, nextY * markingLengthCache];
+
+                        nextX = i + b[0];
+                        nextY = j + b[1];
+                        if (nextX < 0 || nextX >= width || nextY < 0 || nextY >= height)//배열 밖으로 나가면 무조건 얘가 앞
+                        {
+                            return 1;
+                        }
+                        bY = markingPositionYs[nextX * markingLengthCache, nextY * markingLengthCache];
+
+                        return (aY < bY) ? -1 : 1;
+                    });
         }
     }
     public Changed MarkingPositionsChanged;
@@ -475,6 +501,10 @@ public class CamInput
                 index++;
             }
         groupArea = new int[length];
+        add4HalfFill = new int[lengthI, lengthJ][][];
+        for (int j = 0; j < lengthJ; j++)
+            for (int i = 0; i < lengthI; i++)
+                add4HalfFill[i, j] = new int[][] { new int[] { -1, -1 }, new int[] { 0, -1 }, new int[] { 1, -1 }, new int[] { -1, 0 }, new int[] { 1, 0 }, new int[] { -1, 1 }, new int[] { 0, 1 }, new int[] { 1, 1 } };
         MarkingPositionsUpdate();
     }
     public void MarkingLengthChanged()
@@ -622,6 +652,8 @@ public class CamInput
             }
 
             int length = markingPositionIndexsSortByY.Length;
+            bool touchBoundary;
+            int touchOtherGroup;
             lastGroupIndex = -1;
             //그룹별 영토 표시(이 시점에서 무주지(-1)는 완전히 사라지게됨)
             for (int i = 0; i < length; i++)
@@ -630,10 +662,17 @@ public class CamInput
                 {
                     lastGroupIndex++;
                     groupArea[lastGroupIndex] = 0;
-                    HalfFillInVertexOfMarkings(lastGroupIndex, markingPositionIndexsSortByY[i].x, markingPositionIndexsSortByY[i].y,width,height, markingPositionYs[markingPositionIndexsSortByY[i].x * markingLengthCache, markingPositionIndexsSortByY[i].y * markingLengthCache]);
+                    touchBoundary = false;
+                    touchOtherGroup = -2;
+                    HalfFillInVertexOfMarkings(lastGroupIndex, markingPositionIndexsSortByY[i].x, markingPositionIndexsSortByY[i].y,width,height, markingPositionYs[markingPositionIndexsSortByY[i].x * markingLengthCache, markingPositionIndexsSortByY[i].y * markingLengthCache],ref touchBoundary,ref touchOtherGroup);
+                    //경계에 닿지도 않고 최소 그룹 넓이보다 작다면 합병 또는 제거
+                    if (!touchBoundary && groupArea[lastGroupIndex] < minGroupArea)
+                    {
+                        ReplaceFill(lastGroupIndex, touchOtherGroup, markingPositionIndexsSortByY[i].x, markingPositionIndexsSortByY[i].y, width, height);
+                        lastGroupIndex--;
+                    }
                 }
             }
-            //기준넓이에 미달하는 그룹들(단, 모서리에 닿은 경우 예외) 제거 또는 주변 그룹에 병합....을 구현할 자리지만 일단 다음 동작이 더 중요하므로 보류해둠
 
             //가장 큰 그룹 두 개 선정
             if (lastGroupIndex == -1)//그룹이 하나도 없는 경우
@@ -643,6 +682,8 @@ public class CamInput
             else if (lastGroupIndex == 0)//그룹이 단 하나인 경우 (이 경우 가장 큰 그룹의 인덱스는 반드시 0)
             {
                 vertexCount = 1;
+
+                length = markingPositionIndexsSortByY.Length;
                 int leftVertexArea = vertexArea;
                 for (int i = 0; i < length; i++)
                 {
@@ -658,12 +699,89 @@ public class CamInput
             else//그룹이 둘 이상인 경우
             {
                 vertexCount = 2;
+
+                //가장 큰 두 그룹을 선정
+                int first = 0, second = 0;
+                for (int i = 1; i <= lastGroupIndex; i++)
+                    if (groupArea[first] < groupArea[i])
+                        first = i;
+
+                if(first == 0)
+                {
+                    second = 1;
+                    for (int i = 2; i < lastGroupIndex; i++)
+                        if (groupArea[second] < groupArea[i])
+                            second = i;
+                }
+                else
+                {
+                    for (int i = 1; i < lastGroupIndex; i++)
+                        if (i != first && groupArea[second] < groupArea[i])
+                            second = i;
+                }
+
+                //선정된 두 그룹에서 꼭짓점만 남기고 다른 부분 전부 제거
+                length = markingPositionIndexsSortByY.Length;
+                int leftVertexArea1st = vertexArea, leftVertexArea2nd = vertexArea;
+                for (int i = 0; i < length; i++)
+                {
+                    if (vertexOfMarkings[markingPositionIndexsSortByY[i].x, markingPositionIndexsSortByY[i].y] == first)//그룹의 영역중 y값이 작은 순서대로 leftVertexArea만큼 남기고 나머지 영역은 공허로.
+                    {
+                        if (leftVertexArea1st > 0)
+                            leftVertexArea1st--;
+                        else
+                            vertexOfMarkings[markingPositionIndexsSortByY[i].x, markingPositionIndexsSortByY[i].y] = -2;
+                    }
+                    else if (vertexOfMarkings[markingPositionIndexsSortByY[i].x, markingPositionIndexsSortByY[i].y] == second)//그룹의 영역중 y값이 작은 순서대로 leftVertexArea만큼 남기고 나머지 영역은 공허로.
+                    {
+                        if (leftVertexArea2nd > 0)
+                            leftVertexArea2nd--;
+                        else
+                            vertexOfMarkings[markingPositionIndexsSortByY[i].x, markingPositionIndexsSortByY[i].y] = -2;
+                    }
+                    else
+                        vertexOfMarkings[markingPositionIndexsSortByY[i].x, markingPositionIndexsSortByY[i].y] = -2;
+                }
             }
         }
 
         //그림자옵션구현해야함
     }
-    int[][] add4HalfFill =
+    int[,][][] add4HalfFill;//CamInputManager.resolution 바뀌었을때 크기가 바뀌어야함. MarkingPositionsUpdate에서 각 요소 정렬
+    void HalfFillInVertexOfMarkings(int groupIndex,int x,int y,int width ,int height,float limitY,ref bool touchBoundary, ref int touchOtherGroup)//무주지에만 실행해라..
+    {
+        vertexOfMarkings[x, y] = groupIndex;//이 곳을 주어진 그룹의 영토로.
+        groupArea[groupIndex]++;
+
+        int nextX, nextY;//주변의 픽셀들을 y값이 낮은 순서대로 정렬
+
+        for (int i = 0; i < 8; i++)
+        {
+            nextX = x + add4HalfFill[x, y][i][0];
+            nextY = y + add4HalfFill[x, y][i][1];
+            if (nextX < 0 || nextX >= width || nextY < 0 || nextY >= height)//배열 밖으로 나가면 안됨
+            {
+                limitY = markingPositionYs[x*markingLengthCache, y * markingLengthCache];
+                touchBoundary = true;
+                continue;
+            }
+
+            if (markingPositionYs[nextX * markingLengthCache, nextY * markingLengthCache] > limitY-1f)//높이 제한에 안걸림.
+            {
+                if (vertexOfMarkings[nextX, nextY] == -1)//무주지라면 HalfFill 실행
+                {
+                    HalfFillInVertexOfMarkings(groupIndex, nextX, nextY, width, height, limitY,ref touchBoundary,ref touchOtherGroup);
+                }
+                else//높이제한에 안걸리는데....무주지도 아니고(즉 장애물이면) limitY를 갱신
+                {
+                    limitY = markingPositionYs[nextX * markingLengthCache, nextY * markingLengthCache];
+                    if (vertexOfMarkings[nextX, nextY] != -2 && vertexOfMarkings[nextX, nextY] != groupIndex)//다른 그룹의 영토라면 
+                        touchOtherGroup = vertexOfMarkings[nextX, nextY];
+                }
+            }
+        }
+    }
+    int[][] add4ReplaceFill =
     {
         new int[]{-1,-1 },
         new int[]{0,-1 },
@@ -674,55 +792,20 @@ public class CamInput
         new int[]{0,1 },
         new int[]{1,1 }
     };
-    void HalfFillInVertexOfMarkings(int groupIndex,int x,int y,int width ,int height,float limitY)//무주지에만 실행해라..
+    void ReplaceFill(int currentGroupIndex, int nextGroupIndex,int x, int y, int width, int height)
     {
-        vertexOfMarkings[x, y] = groupIndex;//이 곳을 주어진 그룹의 영토로.
-        groupArea[groupIndex]++;
-
-        int nextX, nextY;//주변의 픽셀들을 y값이 낮은 순서대로 정렬
-        float aY, bY;
-        System.Array.Sort<int[]>(add4HalfFill,delegate(int[] a,int[] b)
-        {
-            nextX = x + a[0];
-            nextY = y + a[1];
-            if (nextX < 0 || nextX >= width || nextY < 0 || nextY >= height)//배열 밖으로 나가면 무조건 얘가 앞
-            {
-                return -1;
-            }
-            aY = markingPositionYs[nextX * markingLengthCache, nextY * markingLengthCache];
-
-            nextX = x + b[0];
-            nextY = y + b[1];
-            if (nextX < 0 || nextX >= width || nextY < 0 || nextY >= height)//배열 밖으로 나가면 무조건 얘가 앞
-            {
-                return 1;
-            }
-            bY = markingPositionYs[nextX * markingLengthCache, nextY * markingLengthCache];
-
-            return (aY < bY) ? -1 : 1;
-        });
-
+        vertexOfMarkings[x, y] = nextGroupIndex;//이 곳을 주어진 그룹의 영토로.
+        if (nextGroupIndex >= 0)
+            groupArea[nextGroupIndex]++;
+        int nextX, nextY;
         for (int i = 0; i < 8; i++)
         {
-            nextX = x + add4HalfFill[i][0];
-            nextY = y + add4HalfFill[i][1];
+            nextX = x + add4ReplaceFill[i][0];
+            nextY = y + add4ReplaceFill[i][1];
             if (nextX < 0 || nextX >= width || nextY < 0 || nextY >= height)//배열 밖으로 나가면 안됨
-            {
-                limitY = markingPositionYs[x*markingLengthCache, y * markingLengthCache];
                 continue;
-            }
-
-            if (markingPositionYs[nextX * markingLengthCache, nextY * markingLengthCache] > limitY-1f)//높이 제한에 안걸림.
-            {
-                if (vertexOfMarkings[nextX, nextY] == -1)//무주지라면 HalfFill 실행
-                {
-                    HalfFillInVertexOfMarkings(groupIndex, nextX, nextY, width, height, limitY);
-                }
-                else//높이제한에 안걸리는데....무주지도 아니고(즉 장애물이면) limitY를 갱신
-                {
-                    limitY = markingPositionYs[nextX * markingLengthCache, nextY * markingLengthCache];
-                }
-            }
+            if (vertexOfMarkings[nextX, nextY] == currentGroupIndex)//currentGroupIndex라면 ReplaceFill 실행
+                ReplaceFill(currentGroupIndex, nextGroupIndex, nextX, nextY, width, height);
         }
     }
 }
