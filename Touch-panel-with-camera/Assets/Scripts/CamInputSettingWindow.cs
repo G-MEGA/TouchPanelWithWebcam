@@ -30,6 +30,16 @@ public class CamInputSettingWindow : MonoBehaviour
     GameObject colorSettingWindowPrefab;
     [SerializeField]
     RectTransform colorSettingWindowsParent;
+    [SerializeField]
+    InputField webcamResolutionX;
+    [SerializeField]
+    InputField webcamResolutionY;
+    [SerializeField]
+    InputField vertexArea;
+    [SerializeField]
+    InputField minGroupArea;
+    [SerializeField]
+    Toggle shadow;
 
     RectTransform webcamDisplayRectTransform;
     CamInput camInput;
@@ -50,6 +60,11 @@ public class CamInputSettingWindow : MonoBehaviour
         hDelta.onValueChanged.AddListener(new UnityEngine.Events.UnityAction<float>(HDeltaChange));
         sDelta.onValueChanged.AddListener(new UnityEngine.Events.UnityAction<float>(SDeltaChange));
         vDelta.onValueChanged.AddListener(new UnityEngine.Events.UnityAction<float>(VDeltaChange));
+        webcamResolutionX.onValueChanged.AddListener(new UnityEngine.Events.UnityAction<string>(WebcamResolutionXChange));
+        webcamResolutionY.onValueChanged.AddListener(new UnityEngine.Events.UnityAction<string>(WebcamResolutionYChange));
+        vertexArea.onValueChanged.AddListener(new UnityEngine.Events.UnityAction<string>(VertexAreaChange));
+        minGroupArea.onValueChanged.AddListener(new UnityEngine.Events.UnityAction<string>(MinGroupAreaChange));
+        shadow.onValueChanged.AddListener(new UnityEngine.Events.UnityAction<bool>(ShadowChange));
     }
     public void StartSetting(int index)
     {
@@ -70,6 +85,11 @@ public class CamInputSettingWindow : MonoBehaviour
         hDelta.value = camInput.allowedHueDeltaWithBaseColor;
         sDelta.value = camInput.allowedSaturationDeltaWithBaseColor;
         vDelta.value = camInput.allowedValueDeltaWithBaseColor;
+        webcamResolutionX.text = camInput.Texture.requestedWidth.ToString();
+        webcamResolutionY.text = camInput.Texture.requestedHeight.ToString();
+        vertexArea.text = camInput.vertexArea.ToString();
+        minGroupArea.text = camInput.minGroupArea.ToString();
+        shadow.isOn = camInput.shadow;
 
         webcamDisplay.Init(index);
         webcamDisplay.ClickAndPointerEventData += OnClickWebcamDisplay;
@@ -126,6 +146,31 @@ public class CamInputSettingWindow : MonoBehaviour
     {
         camInput.allowedValueDeltaWithBaseColor = value;
         vDelta.value = camInput.allowedValueDeltaWithBaseColor;
+    }
+    public void WebcamResolutionXChange(string value)
+    {
+        camInput.Texture.requestedWidth = int.Parse(value);
+        webcamResolutionX.text = camInput.Texture.requestedWidth.ToString();
+    }
+    public void WebcamResolutionYChange(string value)
+    {
+        camInput.Texture.requestedHeight = int.Parse(value);
+        webcamResolutionY.text = camInput.Texture.requestedHeight.ToString();
+    }
+    public void VertexAreaChange(string value)
+    {
+        camInput.vertexArea = int.Parse(value);
+        vertexArea.text = camInput.vertexArea.ToString();
+    }
+    public void MinGroupAreaChange(string value)
+    {
+        camInput.minGroupArea = int.Parse(value);
+        minGroupArea.text = camInput.minGroupArea.ToString();
+    }
+    public void ShadowChange(bool value)
+    {
+        camInput.shadow = value;
+        shadow.isOn = camInput.shadow;
     }
 
     public void ToggleCamInputActive()

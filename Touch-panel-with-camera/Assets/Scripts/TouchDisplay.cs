@@ -39,7 +39,7 @@ public class TouchDisplay : MonoBehaviour
             {
                 for (int j = 0; j < texture.height; j++)
                 {
-                    if (manager.markings[i, j] == activeCaminputCount)
+                    if (manager.markingCount[i, j] == activeCaminputCount)
                         colors[i + texture.width * j] = Color.white;
                     else
                     {

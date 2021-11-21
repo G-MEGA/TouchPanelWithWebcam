@@ -11,6 +11,8 @@ public class TouchSettingScreenCtrl : MonoBehaviour
     Slider resolutionY;
     [SerializeField]
     InputField markingLength;
+    [SerializeField]
+    Toggle removeGhostWhen2Cam;
 
     CamInputManager manager;
     
@@ -23,6 +25,8 @@ public class TouchSettingScreenCtrl : MonoBehaviour
         resolutionY.value = manager.Resolution.y;
         markingLength.onEndEdit.AddListener(new UnityEngine.Events.UnityAction<string>(MarkingLengthChange));
         markingLength.text = manager.MarkingLength.ToString();
+        removeGhostWhen2Cam.onValueChanged.AddListener(new UnityEngine.Events.UnityAction<bool>(RemoveGhostWhen2CamChange));
+        removeGhostWhen2Cam.isOn = manager.removeGhostWhen2Cam;
     }
 
     public void ResolutionXChange(float x)
@@ -39,6 +43,11 @@ public class TouchSettingScreenCtrl : MonoBehaviour
     {
         manager.MarkingLength = int.Parse(i);
         markingLength.text = manager.MarkingLength.ToString();
+    }
+    public void RemoveGhostWhen2CamChange(bool value)
+    {
+        manager.removeGhostWhen2Cam = value;
+        removeGhostWhen2Cam.isOn = manager.removeGhostWhen2Cam;
     }
 
     public void AllCamInputsBaseColorsUpdate()

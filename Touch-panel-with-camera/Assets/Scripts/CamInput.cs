@@ -62,9 +62,20 @@ public class CamInput
     
     public bool[,] markings;//CamInputManager.resolution 바뀌었을때 크기가 바뀌어야함
     public int[,] vertexOfMarkings;//CamInputManager.resolution 바뀌었을때 크기가 바뀌어야함. -2는 공허를 의미. -1은 무주지를 의미. 그 외의 음수가 아닌 자연수는 해당 인덱스의 그룹의 영토임을 나타냄.
-    public int vertexCount = 0;
     int[] groupArea;//길이는... CamInputManager.resolution 바뀌었을때 바뀌어야함. vertexOfMarkings구할때 사용함. List로 안하는 이유는 메모리용량을 희생해서 메모리 할당 오버헤드를 최소화 하려고
-    public int lastGroupIndex;
+    int[] vertexMinXIndex;//길이는... CamInputManager.resolution 바뀌었을때 바뀌어야함.
+    int[] vertexMaxXIndex;//길이는... CamInputManager.resolution 바뀌었을때 바뀌어야함.
+    int[] groupLeftVertexArea;//길이는... CamInputManager.resolution 바뀌었을때 바뀌어야함. vertexOfMarkings 구할때 사용함. List로 안하는 이유는 메모리용량을 희생해서 메모리 할당 오버헤드를 최소화 하려고
+    int lastGroupIndex = -1;
+    public int VertexCount
+    {
+        get
+        {
+            return lastGroupIndex + 1;
+        }
+    }
+    public int leftVertexIndex4RemoveGhost;
+    public int rightVertexIndex4RemoveGhost;
     Vector2 frontLeft = new Vector2(0f,1f), frontRight = new Vector2(1f, 1f), backLeft = new Vector2(0f, 0f), backRight = new Vector2(1f, 0f);//0~1사이의 값으로 각 꼭짓점의 위치를 나타냄.
     public Vector2 FL
     {
@@ -318,9 +329,8 @@ public class CamInput
 
     public int resolutionRequestToCamWidth = 1;
     public int resolutionRequestToCamHeight = 1;
-    public int removeSmallArea = 4;//0일시 비활성화
-    public bool shadow = true;
-    public int vertexArea = 5;
+    public bool shadow = false;
+    public int vertexArea = 10;
     public int minGroupArea = 5;
 
     public CamInput(WebCamTexture cam)
@@ -500,7 +510,12 @@ public class CamInput
                 markingPositionIndexsSortByY[index].y = j;
                 index++;
             }
+
         groupArea = new int[length];
+        groupLeftVertexArea = new int[length];
+        vertexMinXIndex = new int[length];
+        vertexMaxXIndex = new int[length];
+
         add4HalfFill = new int[lengthI, lengthJ][][];
         for (int j = 0; j < lengthJ; j++)
             for (int i = 0; i < lengthI; i++)
@@ -655,7 +670,7 @@ public class CamInput
             bool touchBoundary;
             int touchOtherGroup;
             lastGroupIndex = -1;
-            //그룹별 영토 표시(이 시점에서 무주지(-1)는 완전히 사라지게됨)
+            //그룹별 영토 표시(이 시점에서 무주지(-1)는 완전히 사라지게됨) 텍스쳐상에서 y값이 낮은 순으로 그룹이 만들어지므로 인덱스가 낮은 그룹일수록 텍스쳐상에서의 최소 y값도 낮다.
             for (int i = 0; i < length; i++)
             {
                 if (vertexOfMarkings[markingPositionIndexsSortByY[i].x, markingPositionIndexsSortByY[i].y] == -1)//무주지일경우 HalfFill 실행. 이때 각 영역별 넓이도 구함.
@@ -674,73 +689,109 @@ public class CamInput
                 }
             }
 
-            //가장 큰 그룹 두 개 선정
-            if (lastGroupIndex == -1)//그룹이 하나도 없는 경우
+            //그룹들에서 꼭짓점만 남기고 나머지 부분들 전부 제거
+            for (int i = 0; i <= lastGroupIndex; i++)
             {
-                vertexCount = 0;
+                groupLeftVertexArea[i] = vertexArea;//각 그룹별 남은 꼭짓점 넓이 초기화
+                vertexMaxXIndex[i] = int.MinValue;
+                vertexMinXIndex[i] = int.MaxValue;
+
+
             }
-            else if (lastGroupIndex == 0)//그룹이 단 하나인 경우 (이 경우 가장 큰 그룹의 인덱스는 반드시 0)
+            length = markingPositionIndexsSortByY.Length;//그룹의 영역중 y값이 작은 순서대로 leftVertexArea만큼 남기고 나머지 영역은 공허로.
+
+            for (int i = 0; i < length; i++)
             {
-                vertexCount = 1;
-
-                length = markingPositionIndexsSortByY.Length;
-                int leftVertexArea = vertexArea;
-                for (int i = 0; i < length; i++)
+                int groupIndex = vertexOfMarkings[markingPositionIndexsSortByY[i].x, markingPositionIndexsSortByY[i].y];
+                if (groupIndex != -2)//이 시점에서 -1은 없으므로 -2가 아니라면 어떤 그룹의 영토라는것을 의미한다
                 {
-                    if (vertexOfMarkings[markingPositionIndexsSortByY[i].x, markingPositionIndexsSortByY[i].y] == 0)//그룹의 영역중 y값이 작은 순서대로 leftVertexArea만큼 남기고 나머지 영역은 공허로.
+                    if (groupLeftVertexArea[groupIndex] > 0)
                     {
-                        if(leftVertexArea > 0)
-                            leftVertexArea--;
-                        else
-                            vertexOfMarkings[markingPositionIndexsSortByY[i].x, markingPositionIndexsSortByY[i].y] = -2;
-                    }
-                }
-            }
-            else//그룹이 둘 이상인 경우
-            {
-                vertexCount = 2;
-
-                //가장 큰 두 그룹을 선정
-                int first = 0, second = 0;
-                for (int i = 1; i <= lastGroupIndex; i++)
-                    if (groupArea[first] < groupArea[i])
-                        first = i;
-
-                if(first == 0)
-                {
-                    second = 1;
-                    for (int i = 2; i < lastGroupIndex; i++)
-                        if (groupArea[second] < groupArea[i])
-                            second = i;
-                }
-                else
-                {
-                    for (int i = 1; i < lastGroupIndex; i++)
-                        if (i != first && groupArea[second] < groupArea[i])
-                            second = i;
-                }
-
-                //선정된 두 그룹에서 꼭짓점만 남기고 다른 부분 전부 제거
-                length = markingPositionIndexsSortByY.Length;
-                int leftVertexArea1st = vertexArea, leftVertexArea2nd = vertexArea;
-                for (int i = 0; i < length; i++)
-                {
-                    if (vertexOfMarkings[markingPositionIndexsSortByY[i].x, markingPositionIndexsSortByY[i].y] == first)//그룹의 영역중 y값이 작은 순서대로 leftVertexArea만큼 남기고 나머지 영역은 공허로.
-                    {
-                        if (leftVertexArea1st > 0)
-                            leftVertexArea1st--;
-                        else
-                            vertexOfMarkings[markingPositionIndexsSortByY[i].x, markingPositionIndexsSortByY[i].y] = -2;
-                    }
-                    else if (vertexOfMarkings[markingPositionIndexsSortByY[i].x, markingPositionIndexsSortByY[i].y] == second)//그룹의 영역중 y값이 작은 순서대로 leftVertexArea만큼 남기고 나머지 영역은 공허로.
-                    {
-                        if (leftVertexArea2nd > 0)
-                            leftVertexArea2nd--;
-                        else
-                            vertexOfMarkings[markingPositionIndexsSortByY[i].x, markingPositionIndexsSortByY[i].y] = -2;
+                        //이 위치를 버텍스로...
+                        groupLeftVertexArea[groupIndex]--;
+                        //버텍스의 최소최대x인덱스 구하기
+                        if (vertexMinXIndex[groupIndex] > markingPositionIndexsSortByY[i].x)
+                            vertexMinXIndex[groupIndex] = markingPositionIndexsSortByY[i].x;
+                        if (vertexMaxXIndex[groupIndex] < markingPositionIndexsSortByY[i].x)
+                            vertexMaxXIndex[groupIndex] = markingPositionIndexsSortByY[i].x;
                     }
                     else
-                        vertexOfMarkings[markingPositionIndexsSortByY[i].x, markingPositionIndexsSortByY[i].y] = -2;
+                        vertexOfMarkings[markingPositionIndexsSortByY[i].x, markingPositionIndexsSortByY[i].y] = -2;//더 이상 버텍스넓이가 남아있지 않으므로 제거
+                }
+            }
+
+            if (CamInputManager.Instance.RemoveGhostActive)//고스트터치 제거용 꼭짓점 선택
+            {
+                if (lastGroupIndex == -1)//그룹이 하나도 없는 경우
+                {
+                    leftVertexIndex4RemoveGhost = -1;
+                    rightVertexIndex4RemoveGhost = -1;
+                }
+                else if (lastGroupIndex == 0)//그룹이 단 하나인 경우
+                {
+                    leftVertexIndex4RemoveGhost = 0;
+                    rightVertexIndex4RemoveGhost = -1;
+                }
+                else//그룹이 두 개 이상인 경우
+                {
+                    if ((vertexMaxXIndex[0] + vertexMinXIndex[0]) / 2 < (vertexMaxXIndex[1] + vertexMinXIndex[1]) / 2)
+                    {
+                        leftVertexIndex4RemoveGhost = 0;
+                        rightVertexIndex4RemoveGhost = 1;
+                    }
+                    else
+                    {
+                        leftVertexIndex4RemoveGhost = 1;
+                        rightVertexIndex4RemoveGhost = 0;
+                    }
+                }
+            }
+            else
+            {
+                leftVertexIndex4RemoveGhost = -1;
+                rightVertexIndex4RemoveGhost = -1;
+            }
+
+            if (shadow)
+            {
+                //markings clear
+                for (int i = 0; i < width; i++)
+                {
+                    for (int j = 0; j < height; j++)
+                    {
+                        markings[i, j] = false;
+                    }
+                }
+
+                //Y가 낮은 순으로 순회
+                length = markingPositionIndexsSortByY.Length;
+                float minX;
+                float maxX;
+                int nextX,nextY;
+                float nextPositionX;
+                for (int i = 0; i < length; i++)
+                {
+                    if (vertexOfMarkings[markingPositionIndexsSortByY[i].x, markingPositionIndexsSortByY[i].y] != -2)//이 시점에서 -1은 없으므로 -2가 아니라면 해당위치에 어떤 버텍스가 존재함을 의미한다.
+                    {
+                        //텍스쳐상에서의 minX maxX를 구한다 어떻게? 주변의 8개의 점들것들중에서 꺼내옴
+                        //y제한은 자신으로
+                        minX = float.MaxValue;
+                        maxX = float.MinValue;
+                        for (int j = 0; j < 8; j++)
+                        {
+                            nextX = markingPositionIndexsSortByY[i].x + add4ReplaceFill[j][0];
+                            nextY = markingPositionIndexsSortByY[i].y + add4ReplaceFill[j][1];
+                            if (nextX < 0 || nextX >= width || nextY < 0 || nextY >= height)//배열 밖으로 나가면 안됨
+                                continue;
+
+                            nextPositionX = markingPositionXs[nextX * markingLengthCache, nextY * markingLengthCache];
+                            if (minX > nextPositionX)
+                                minX = nextPositionX;
+                            if(maxX < nextPositionX)
+                                maxX = nextPositionX;
+                        }
+                        ShadowFill(markingPositionIndexsSortByY[i].x, markingPositionIndexsSortByY[i].y, width, height, minX, maxX, markingPositionYs[markingPositionIndexsSortByY[i].x * markingLengthCache, markingPositionIndexsSortByY[i].y * markingLengthCache]);
+                    }
                 }
             }
         }
@@ -753,7 +804,7 @@ public class CamInput
         vertexOfMarkings[x, y] = groupIndex;//이 곳을 주어진 그룹의 영토로.
         groupArea[groupIndex]++;
 
-        int nextX, nextY;//주변의 픽셀들을 y값이 낮은 순서대로 정렬
+        int nextX, nextY;
 
         for (int i = 0; i < 8; i++)
         {
@@ -806,6 +857,28 @@ public class CamInput
                 continue;
             if (vertexOfMarkings[nextX, nextY] == currentGroupIndex)//currentGroupIndex라면 ReplaceFill 실행
                 ReplaceFill(currentGroupIndex, nextGroupIndex, nextX, nextY, width, height);
+        }
+    }
+    void ShadowFill(int x, int y, int width, int height, float minX, float maxX, float limitY)
+    {
+        markings[x, y] = true;
+
+        int nextX, nextY;
+
+        for (int i = 0; i < 8; i++)
+        {
+            nextX = x + add4HalfFill[x, y][i][0];
+            nextY = y + add4HalfFill[x, y][i][1];
+            if (nextX < 0 || nextX >= width || nextY < 0 || nextY >= height)//배열 밖으로 나가면 안됨
+                continue;
+
+            if (markingPositionYs[nextX * markingLengthCache, nextY * markingLengthCache] > limitY&&
+                markingPositionXs[nextX * markingLengthCache, nextY * markingLengthCache] >= minX &&
+                markingPositionXs[nextX * markingLengthCache, nextY * markingLengthCache] <= maxX &&
+                !markings[nextX, nextY])//높이 제한,X제한에 안걸리고 마킹이 false라면 ShadowFill
+            {
+                ShadowFill(nextX, nextY, width, height, minX, maxX, limitY);
+            }
         }
     }
 }

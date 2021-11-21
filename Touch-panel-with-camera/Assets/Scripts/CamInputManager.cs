@@ -23,7 +23,9 @@ public class CamInputManager : MonoBehaviour
                 resolution.y = 2;
             if(temp != resolution)
             {
-                markings = new int[resolution.x, resolution.y];
+                markingCount = new int[resolution.x, resolution.y];
+                marking = new int[resolution.x, resolution.y];
+                prevMarking = new int[resolution.x, resolution.y];
 
                 //해상도 변경시 실행
                 if (camInputs != null)
@@ -75,7 +77,9 @@ public class CamInputManager : MonoBehaviour
         }
     }
 
-    public int[,] markings = new int[0,0];
+    public int[,] markingCount = new int[0,0];
+    public int[,] marking = new int[0, 0];//0일때 NotChecked, 1일때 black, 2일때 white, 3일때 gray, 4일때 ghost. Update완료 후 0이 있으면 안됨
+    int[,] prevMarking = new int[0, 0];
     public CamInput[] camInputs;
     public int ActiveCamInputCount
     {
@@ -101,7 +105,9 @@ public class CamInputManager : MonoBehaviour
 
     CamInputManager()
     {
-        markings = new int[resolution.x, resolution.y];
+        markingCount = new int[resolution.x, resolution.y];
+        marking = new int[resolution.x, resolution.y];
+        prevMarking = new int[resolution.x, resolution.y];
     }
     void Awake()
     {
@@ -147,7 +153,7 @@ public class CamInputManager : MonoBehaviour
                     if (camInputs[k].markings[i, j])
                         temp++;
                 }
-                markings[i, j] = temp;
+                markingCount[i, j] = temp;
             }
         }
     }
