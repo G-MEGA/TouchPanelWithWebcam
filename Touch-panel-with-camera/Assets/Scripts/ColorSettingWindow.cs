@@ -74,8 +74,8 @@ public class ColorSettingWindow : MonoBehaviour
             rDelta.gameObject.SetActive(customColor.markingsUpdateMethod == MarkingsUpdateMethod.CompareRGB);
             gDelta.gameObject.SetActive(customColor.markingsUpdateMethod == MarkingsUpdateMethod.CompareRGB);
             bDelta.gameObject.SetActive(customColor.markingsUpdateMethod == MarkingsUpdateMethod.CompareRGB);
-            hDelta.gameObject.SetActive(customColor.markingsUpdateMethod == MarkingsUpdateMethod.CompareHSV);
-            sDelta.gameObject.SetActive(customColor.markingsUpdateMethod == MarkingsUpdateMethod.CompareHSV);
+            hDelta.gameObject.SetActive(customColor.markingsUpdateMethod == MarkingsUpdateMethod.CompareHSV || customColor.markingsUpdateMethod == MarkingsUpdateMethod.CompareH_SV);
+            sDelta.gameObject.SetActive(customColor.markingsUpdateMethod == MarkingsUpdateMethod.CompareHSV || customColor.markingsUpdateMethod == MarkingsUpdateMethod.CompareH_SV);
             vDelta.gameObject.SetActive(customColor.markingsUpdateMethod == MarkingsUpdateMethod.CompareHSV);
             rDelta.value = customColor.allowedRedDelta;
             gDelta.value = customColor.allowedGreenDelta;
@@ -144,8 +144,8 @@ public class ColorSettingWindow : MonoBehaviour
         rDelta.gameObject.SetActive(customColor.markingsUpdateMethod == MarkingsUpdateMethod.CompareRGB);
         gDelta.gameObject.SetActive(customColor.markingsUpdateMethod == MarkingsUpdateMethod.CompareRGB);
         bDelta.gameObject.SetActive(customColor.markingsUpdateMethod == MarkingsUpdateMethod.CompareRGB);
-        hDelta.gameObject.SetActive(customColor.markingsUpdateMethod == MarkingsUpdateMethod.CompareHSV);
-        sDelta.gameObject.SetActive(customColor.markingsUpdateMethod == MarkingsUpdateMethod.CompareHSV);
+        hDelta.gameObject.SetActive(customColor.markingsUpdateMethod == MarkingsUpdateMethod.CompareHSV || customColor.markingsUpdateMethod == MarkingsUpdateMethod.CompareH_SV);
+        sDelta.gameObject.SetActive(customColor.markingsUpdateMethod == MarkingsUpdateMethod.CompareHSV || customColor.markingsUpdateMethod == MarkingsUpdateMethod.CompareH_SV);
         vDelta.gameObject.SetActive(customColor.markingsUpdateMethod == MarkingsUpdateMethod.CompareHSV);
     }
     public void RDeltaChange(float value)

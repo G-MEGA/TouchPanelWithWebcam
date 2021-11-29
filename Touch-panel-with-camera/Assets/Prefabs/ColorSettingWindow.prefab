@@ -1203,6 +1203,8 @@ MonoBehaviour:
     m_Options:
     - m_Text: HSV
       m_Image: {fileID: 0}
+    - m_Text: H_SV
+      m_Image: {fileID: 0}
     - m_Text: RGB
       m_Image: {fileID: 0}
     - m_Text: None

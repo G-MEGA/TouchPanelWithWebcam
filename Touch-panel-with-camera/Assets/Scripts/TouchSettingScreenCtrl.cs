@@ -13,6 +13,14 @@ public class TouchSettingScreenCtrl : MonoBehaviour
     InputField markingLength;
     [SerializeField]
     Toggle removeGhostWhen2Cam;
+    [SerializeField]
+    Dropdown touchDisplayMode;
+    [SerializeField]
+    InputField minTouchArea;
+    [SerializeField]
+    TouchDisplay touchDisplay;
+    [SerializeField]
+    InputField targetFPS;
 
     CamInputManager manager;
     
@@ -27,6 +35,12 @@ public class TouchSettingScreenCtrl : MonoBehaviour
         markingLength.text = manager.MarkingLength.ToString();
         removeGhostWhen2Cam.onValueChanged.AddListener(new UnityEngine.Events.UnityAction<bool>(RemoveGhostWhen2CamChange));
         removeGhostWhen2Cam.isOn = manager.removeGhostWhen2Cam;
+        touchDisplayMode.onValueChanged.AddListener(new UnityEngine.Events.UnityAction<int>(TouchDisplayModeChange));
+        touchDisplayMode.value = (int)touchDisplay.mode;
+        minTouchArea.onEndEdit.AddListener(new UnityEngine.Events.UnityAction<string>(MinTouchAreaChange));
+        minTouchArea.text = manager.MinTouchArea.ToString();
+        targetFPS.onEndEdit.AddListener(new UnityEngine.Events.UnityAction<string>(TargetFPSChange));
+        targetFPS.text = Application.targetFrameRate.ToString();
     }
 
     public void ResolutionXChange(float x)
@@ -48,6 +62,22 @@ public class TouchSettingScreenCtrl : MonoBehaviour
     {
         manager.removeGhostWhen2Cam = value;
         removeGhostWhen2Cam.isOn = manager.removeGhostWhen2Cam;
+    }
+    public void TouchDisplayModeChange(int value)
+    {
+        touchDisplay.mode = (TouchDisplayMode)value;
+        touchDisplayMode.value = (int)touchDisplay.mode;
+    }
+    public void MinTouchAreaChange(string i)
+    {
+        manager.MinTouchArea = int.Parse(i);
+        minTouchArea.text = manager.MinTouchArea.ToString();
+    }
+
+    public void TargetFPSChange(string i)
+    {
+        Application.targetFrameRate = int.Parse(i);
+        targetFPS.text = Application.targetFrameRate.ToString();
     }
 
     public void AllCamInputsBaseColorsUpdate()

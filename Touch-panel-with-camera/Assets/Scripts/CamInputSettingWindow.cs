@@ -76,8 +76,8 @@ public class CamInputSettingWindow : MonoBehaviour
         rDelta.gameObject.SetActive(camInput.markingsUpdateMethod == MarkingsUpdateMethod.CompareRGB);
         gDelta.gameObject.SetActive(camInput.markingsUpdateMethod == MarkingsUpdateMethod.CompareRGB);
         bDelta.gameObject.SetActive(camInput.markingsUpdateMethod == MarkingsUpdateMethod.CompareRGB);
-        hDelta.gameObject.SetActive(camInput.markingsUpdateMethod == MarkingsUpdateMethod.CompareHSV);
-        sDelta.gameObject.SetActive(camInput.markingsUpdateMethod == MarkingsUpdateMethod.CompareHSV);
+        hDelta.gameObject.SetActive(camInput.markingsUpdateMethod == MarkingsUpdateMethod.CompareHSV || camInput.markingsUpdateMethod == MarkingsUpdateMethod.CompareH_SV);
+        sDelta.gameObject.SetActive(camInput.markingsUpdateMethod == MarkingsUpdateMethod.CompareHSV || camInput.markingsUpdateMethod == MarkingsUpdateMethod.CompareH_SV);
         vDelta.gameObject.SetActive(camInput.markingsUpdateMethod == MarkingsUpdateMethod.CompareHSV);
         rDelta.value = camInput.allowedRedDeltaWithBaseColor;
         gDelta.value = camInput.allowedGreenDeltaWithBaseColor;
@@ -108,8 +108,8 @@ public class CamInputSettingWindow : MonoBehaviour
         rDelta.gameObject.SetActive(camInput.markingsUpdateMethod == MarkingsUpdateMethod.CompareRGB);
         gDelta.gameObject.SetActive(camInput.markingsUpdateMethod == MarkingsUpdateMethod.CompareRGB);
         bDelta.gameObject.SetActive(camInput.markingsUpdateMethod == MarkingsUpdateMethod.CompareRGB);
-        hDelta.gameObject.SetActive(camInput.markingsUpdateMethod == MarkingsUpdateMethod.CompareHSV);
-        sDelta.gameObject.SetActive(camInput.markingsUpdateMethod == MarkingsUpdateMethod.CompareHSV);
+        hDelta.gameObject.SetActive(camInput.markingsUpdateMethod == MarkingsUpdateMethod.CompareHSV || camInput.markingsUpdateMethod == MarkingsUpdateMethod.CompareH_SV);
+        sDelta.gameObject.SetActive(camInput.markingsUpdateMethod == MarkingsUpdateMethod.CompareHSV || camInput.markingsUpdateMethod == MarkingsUpdateMethod.CompareH_SV);
         vDelta.gameObject.SetActive(camInput.markingsUpdateMethod == MarkingsUpdateMethod.CompareHSV);
     }
     public void CamInputDisplayModeChange(int mode)

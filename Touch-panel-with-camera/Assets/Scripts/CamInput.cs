@@ -62,7 +62,7 @@ public class CamInput
     
     public bool[,] markings;//CamInputManager.resolution 바뀌었을때 크기가 바뀌어야함
     public int[,] vertexOfMarkings;//CamInputManager.resolution 바뀌었을때 크기가 바뀌어야함. -2는 공허를 의미. -1은 무주지를 의미. 그 외의 음수가 아닌 자연수는 해당 인덱스의 그룹의 영토임을 나타냄.
-    int[] groupArea;//길이는... CamInputManager.resolution 바뀌었을때 바뀌어야함. vertexOfMarkings구할때 사용함. List로 안하는 이유는 메모리용량을 희생해서 메모리 할당 오버헤드를 최소화 하려고
+    int[] groupArea;//길이는... CamInputManager.resolution 바뀌었을때 바뀌어야함. vertexOfMarkings구할때 사용함. List로 안하는 이유는 메모리용량을 희생해서 메모리 할당 오버헤드를 최소화 하려고. 물론 capacity가 큰 리스트를 사용할 수도 있음.
     int[] vertexMinXIndex;//길이는... CamInputManager.resolution 바뀌었을때 바뀌어야함.
     int[] vertexMaxXIndex;//길이는... CamInputManager.resolution 바뀌었을때 바뀌어야함.
     int[] groupLeftVertexArea;//길이는... CamInputManager.resolution 바뀌었을때 바뀌어야함. vertexOfMarkings 구할때 사용함. List로 안하는 이유는 메모리용량을 희생해서 메모리 할당 오버헤드를 최소화 하려고
@@ -74,8 +74,6 @@ public class CamInput
             return lastGroupIndex + 1;
         }
     }
-    public int leftVertexIndex4RemoveGhost;
-    public int rightVertexIndex4RemoveGhost;
     Vector2 frontLeft = new Vector2(0f,1f), frontRight = new Vector2(1f, 1f), backLeft = new Vector2(0f, 0f), backRight = new Vector2(1f, 0f);//0~1사이의 값으로 각 꼭짓점의 위치를 나타냄.
     public Vector2 FL
     {
@@ -271,8 +269,8 @@ public class CamInput
     public int allowedGreenDeltaWithBaseColor = 25;//0~255
     public int allowedBlueDeltaWithBaseColor = 25;//0~255
     public float allowedHueDeltaWithBaseColor = 0.1f;//0~0.5
-    public float allowedSaturationDeltaWithBaseColor = 1f;//0~1
-    public float allowedValueDeltaWithBaseColor = 1f;//0~1
+    public float allowedSaturationDeltaWithBaseColor = 0.1f;//0~1
+    public float allowedValueDeltaWithBaseColor = 0.1f;//0~1
     float focusX = 0f;
     public float FocusX
     {
@@ -325,12 +323,12 @@ public class CamInput
     }
     public List<CustomColor> customColors = new List<CustomColor>();
 
-    public MarkingsUpdateMethod markingsUpdateMethod = MarkingsUpdateMethod.CompareHSV;//언제든지 바뀌어도 됨
+    public MarkingsUpdateMethod markingsUpdateMethod = MarkingsUpdateMethod.CompareH_SV;//언제든지 바뀌어도 됨
 
     public int resolutionRequestToCamWidth = 1;
     public int resolutionRequestToCamHeight = 1;
     public bool shadow = false;
-    public int vertexArea = 10;
+    public int vertexArea = 25;
     public int minGroupArea = 5;
 
     public CamInput(WebCamTexture cam)
@@ -584,6 +582,25 @@ public class CamInput
 
                         markings[i, j] = Mathf.Abs(deltaH) > allowedHueDeltaWithBaseColor || Mathf.Abs(deltaS) > allowedSaturationDeltaWithBaseColor || Mathf.Abs(deltaV) > allowedValueDeltaWithBaseColor;
                         break;
+                    case MarkingsUpdateMethod.CompareH_SV:
+                        Color.RGBToHSV(baseColors[i, j], out h, out s, out v);
+                        Color.RGBToHSV(currentColor, out currentH, out currentS, out currentV);
+                        if (currentV > 0f)
+                        {
+                            deltaH = currentH - h;
+
+                            while (deltaH <= -0.5f)
+                                deltaH += 1.0f;
+                            while (deltaH > 0.5f)
+                                deltaH -= 1.0f;
+
+                            markings[i, j] = Mathf.Abs(deltaH) > allowedHueDeltaWithBaseColor || allowedSaturationDeltaWithBaseColor / currentV > currentS;
+                        }
+                        else
+                        {
+                            markings[i, j] = allowedSaturationDeltaWithBaseColor > 0f;
+                        }
+                        break;
                     case MarkingsUpdateMethod.CompareRGB:
                         //deltaR = currentColor.r - baseColors[i, j].r;
                         //deltaG = currentColor.g - baseColors[i, j].g;
@@ -630,6 +647,25 @@ public class CamInput
 
                                 markings[i, j] = Mathf.Abs(deltaH) <= customColor.allowedHueDelta && Mathf.Abs(deltaS) <= customColor.allowedSaturationDelta && Mathf.Abs(deltaV) <= customColor.allowedValueDelta;
                                 break;
+                            case MarkingsUpdateMethod.CompareH_SV:
+                                Color.RGBToHSV(customColor.color, out h, out s, out v);
+                                Color.RGBToHSV(currentColor, out currentH, out currentS, out currentV);
+                                if (currentV > 0f)
+                                {
+                                    deltaH = currentH - h;
+
+                                    while (deltaH <= -0.5f)
+                                        deltaH += 1.0f;
+                                    while (deltaH > 0.5f)
+                                        deltaH -= 1.0f;
+
+                                    markings[i, j] = Mathf.Abs(deltaH) <= customColor.allowedHueDelta && customColor.allowedSaturationDelta / currentV <= currentS;
+                                }
+                                else
+                                {
+                                    markings[i, j] = customColor.allowedSaturationDelta <= 0f;
+                                }
+                                break;
                             case MarkingsUpdateMethod.CompareRGB:
                                 deltaR = Mathf.Abs(currentColor.r - customColor.color.r);
                                 deltaG = Mathf.Abs(currentColor.g - customColor.color.g);
@@ -652,7 +688,7 @@ public class CamInput
         }
 
         //꼭짓점 추출. 고스트터치 선별이 작동중이거나, 그림자 옵션이 켜져있을때 실행함.
-        if (true)//Test //(CamInputManager.Instance.RemoveGhostActive || shadow)
+        if (CamInputManager.Instance.RemoveGhostActive || shadow)
         {
             //공허와 무주지 설정
             for (int i = 0; i < width; i++)
@@ -680,8 +716,10 @@ public class CamInput
                     touchBoundary = false;
                     touchOtherGroup = -2;
                     HalfFillInVertexOfMarkings(lastGroupIndex, markingPositionIndexsSortByY[i].x, markingPositionIndexsSortByY[i].y,width,height, markingPositionYs[markingPositionIndexsSortByY[i].x * markingLengthCache, markingPositionIndexsSortByY[i].y * markingLengthCache],ref touchBoundary,ref touchOtherGroup);
-                    //경계에 닿지도 않고 최소 그룹 넓이보다 작다면 합병 또는 제거
-                    if (!touchBoundary && groupArea[lastGroupIndex] < minGroupArea)
+
+                    //if (!touchBoundary && groupArea[lastGroupIndex] < minGroupArea)//경계에 닿지도 않고 최소 그룹 넓이보다 작다면 합병 또는 제거
+                    if (groupArea[lastGroupIndex] < minGroupArea)//경계에 닿아도 최소그룹넓이보다 작다면 합병또는 제거하기로 계획변경함. 최소그룹넓이가 그렇게 넓지도 않고 이것 때문에 자꾸 멀쩡한 그룹이 우선도(인덱스)가 밀림.
+                                                                 //요약 - 최소그룹넓이보다 작으면 무조건 제거 또는 합병
                     {
                         ReplaceFill(lastGroupIndex, touchOtherGroup, markingPositionIndexsSortByY[i].x, markingPositionIndexsSortByY[i].y, width, height);
                         lastGroupIndex--;
@@ -718,38 +756,6 @@ public class CamInput
                     else
                         vertexOfMarkings[markingPositionIndexsSortByY[i].x, markingPositionIndexsSortByY[i].y] = -2;//더 이상 버텍스넓이가 남아있지 않으므로 제거
                 }
-            }
-
-            if (CamInputManager.Instance.RemoveGhostActive)//고스트터치 제거용 꼭짓점 선택
-            {
-                if (lastGroupIndex == -1)//그룹이 하나도 없는 경우
-                {
-                    leftVertexIndex4RemoveGhost = -1;
-                    rightVertexIndex4RemoveGhost = -1;
-                }
-                else if (lastGroupIndex == 0)//그룹이 단 하나인 경우
-                {
-                    leftVertexIndex4RemoveGhost = 0;
-                    rightVertexIndex4RemoveGhost = -1;
-                }
-                else//그룹이 두 개 이상인 경우
-                {
-                    if ((vertexMaxXIndex[0] + vertexMinXIndex[0]) / 2 < (vertexMaxXIndex[1] + vertexMinXIndex[1]) / 2)
-                    {
-                        leftVertexIndex4RemoveGhost = 0;
-                        rightVertexIndex4RemoveGhost = 1;
-                    }
-                    else
-                    {
-                        leftVertexIndex4RemoveGhost = 1;
-                        rightVertexIndex4RemoveGhost = 0;
-                    }
-                }
-            }
-            else
-            {
-                leftVertexIndex4RemoveGhost = -1;
-                rightVertexIndex4RemoveGhost = -1;
             }
 
             if (shadow)
@@ -793,10 +799,76 @@ public class CamInput
                         ShadowFill(markingPositionIndexsSortByY[i].x, markingPositionIndexsSortByY[i].y, width, height, minX, maxX, markingPositionYs[markingPositionIndexsSortByY[i].x * markingLengthCache, markingPositionIndexsSortByY[i].y * markingLengthCache]);
                     }
                 }
+
+                //그림자 작업 완료 후 꼭짓점 추출 다시함
+
+                //공허와 무주지 설정
+                for (int i = 0; i < width; i++)
+                {
+                    for (int j = 0; j < height; j++)
+                    {
+                        if (markings[i, j])
+                            vertexOfMarkings[i, j] = -1;//무주지
+                        else
+                            vertexOfMarkings[i, j] = -2;//공허
+                    }
+                }
+
+                length = markingPositionIndexsSortByY.Length;
+                lastGroupIndex = -1;
+                //그룹별 영토 표시(이 시점에서 무주지(-1)는 완전히 사라지게됨) 텍스쳐상에서 y값이 낮은 순으로 그룹이 만들어지므로 인덱스가 낮은 그룹일수록 텍스쳐상에서의 최소 y값도 낮다.
+                for (int i = 0; i < length; i++)
+                {
+                    if (vertexOfMarkings[markingPositionIndexsSortByY[i].x, markingPositionIndexsSortByY[i].y] == -1)//무주지일경우 HalfFill 실행. 이때 각 영역별 넓이도 구함.
+                    {
+                        lastGroupIndex++;
+                        groupArea[lastGroupIndex] = 0;
+                        touchBoundary = false;
+                        touchOtherGroup = -2;
+                        HalfFillInVertexOfMarkings(lastGroupIndex, markingPositionIndexsSortByY[i].x, markingPositionIndexsSortByY[i].y, width, height, markingPositionYs[markingPositionIndexsSortByY[i].x * markingLengthCache, markingPositionIndexsSortByY[i].y * markingLengthCache], ref touchBoundary, ref touchOtherGroup);
+
+                        //if (!touchBoundary && groupArea[lastGroupIndex] < minGroupArea)//경계에 닿지도 않고 최소 그룹 넓이보다 작다면 합병 또는 제거
+                        if (groupArea[lastGroupIndex] < minGroupArea)//경계에 닿아도 최소그룹넓이보다 작다면 합병또는 제거하기로 계획변경함. 최소그룹넓이가 그렇게 넓지도 않고 이것 때문에 자꾸 멀쩡한 그룹이 우선도(인덱스)가 밀림.
+                                                                     //요약 - 최소그룹넓이보다 작으면 무조건 제거 또는 합병
+                        {
+                            ReplaceFill(lastGroupIndex, touchOtherGroup, markingPositionIndexsSortByY[i].x, markingPositionIndexsSortByY[i].y, width, height);
+                            lastGroupIndex--;
+                        }
+                    }
+                }
+
+                //그룹들에서 꼭짓점만 남기고 나머지 부분들 전부 제거
+                for (int i = 0; i <= lastGroupIndex; i++)
+                {
+                    groupLeftVertexArea[i] = vertexArea;//각 그룹별 남은 꼭짓점 넓이 초기화
+                    vertexMaxXIndex[i] = int.MinValue;
+                    vertexMinXIndex[i] = int.MaxValue;
+
+
+                }
+                length = markingPositionIndexsSortByY.Length;//그룹의 영역중 y값이 작은 순서대로 leftVertexArea만큼 남기고 나머지 영역은 공허로.
+
+                for (int i = 0; i < length; i++)
+                {
+                    int groupIndex = vertexOfMarkings[markingPositionIndexsSortByY[i].x, markingPositionIndexsSortByY[i].y];
+                    if (groupIndex != -2)//이 시점에서 -1은 없으므로 -2가 아니라면 어떤 그룹의 영토라는것을 의미한다
+                    {
+                        if (groupLeftVertexArea[groupIndex] > 0)
+                        {
+                            //이 위치를 버텍스로...
+                            groupLeftVertexArea[groupIndex]--;
+                            //버텍스의 최소최대x인덱스 구하기
+                            if (vertexMinXIndex[groupIndex] > markingPositionIndexsSortByY[i].x)
+                                vertexMinXIndex[groupIndex] = markingPositionIndexsSortByY[i].x;
+                            if (vertexMaxXIndex[groupIndex] < markingPositionIndexsSortByY[i].x)
+                                vertexMaxXIndex[groupIndex] = markingPositionIndexsSortByY[i].x;
+                        }
+                        else
+                            vertexOfMarkings[markingPositionIndexsSortByY[i].x, markingPositionIndexsSortByY[i].y] = -2;//더 이상 버텍스넓이가 남아있지 않으므로 제거
+                    }
+                }
             }
         }
-
-        //그림자옵션구현해야함
     }
     int[,][][] add4HalfFill;//CamInputManager.resolution 바뀌었을때 크기가 바뀌어야함. MarkingPositionsUpdate에서 각 요소 정렬
     void HalfFillInVertexOfMarkings(int groupIndex,int x,int y,int width ,int height,float limitY,ref bool touchBoundary, ref int touchOtherGroup)//무주지에만 실행해라..
@@ -891,12 +963,12 @@ public class CustomColor
     public int allowedGreenDelta = 25;//0~255
     public int allowedBlueDelta = 25;//0~255
     public float allowedHueDelta = 0.1f;//0~0.5
-    public float allowedSaturationDelta = 0.8f;//0~1
-    public float allowedValueDelta = 1f;//0~1
-    public MarkingsUpdateMethod markingsUpdateMethod = MarkingsUpdateMethod.CompareHSV;//언제든지 바뀌어도 됨
+    public float allowedSaturationDelta = 0.1f;//0~1
+    public float allowedValueDelta = 0.1f;//0~1
+    public MarkingsUpdateMethod markingsUpdateMethod = MarkingsUpdateMethod.CompareH_SV;//언제든지 바뀌어도 됨
 
 }
 public enum MarkingsUpdateMethod
 {
-    CompareHSV, CompareRGB, None
+    CompareHSV, CompareH_SV, CompareRGB, None
 }
