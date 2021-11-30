@@ -107,7 +107,7 @@ public class CamInputManager : MonoBehaviour
     int[,] prevMarking;
     public TouchInfo[] touches;
     TouchInfo[] prevTouches;
-    int touchesLastIndex;
+    public int touchesLastIndex;
     int prevTouchesLastIndex;
     bool[] prevTouchesCheck4Update;
     public CamInput[] camInputs;
@@ -629,15 +629,6 @@ public class CamInputManager : MonoBehaviour
                 touches[i].moveRight = false;
                 touches[i].moveFront = false;
                 touches[i].moveBack = false;
-            }
-        }
-
-        //test
-        for (int i = 0; i <= touchesLastIndex; i++)
-        {
-            if (touches[i].isDownThisFrame && width > 2 && height > 2)
-            {
-                Debug.Log(touches[i].x / (width - 1) + ", " + touches[i].y / (height - 1));
             }
         }
     }

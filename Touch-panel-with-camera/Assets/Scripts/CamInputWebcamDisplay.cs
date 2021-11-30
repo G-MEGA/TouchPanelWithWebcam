@@ -106,6 +106,10 @@ public class CamInputWebcamDisplay : MonoBehaviour, IPointerDownHandler
         if (focusY != null)
             focusY.value = CamInputManager.Instance.camInputs[index].FocusY;
     }
+    public void ToggleCamInputActive()
+    {
+        CamInputManager.Instance.camInputs[index].Active = !CamInputManager.Instance.camInputs[index].Active;
+    }
 }
 public delegate void WithID(int id);
 public delegate void WithPointerEvent(PointerEventData eventData);

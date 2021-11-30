@@ -301,14 +301,6 @@ public class CamInputSettingWindow : MonoBehaviour
             if (Input.GetKeyDown(KeyCode.RightArrow))
                 camInput.FocusX += 0.05f;
         }*/
-        if (Input.GetKeyDown(KeyCode.PageUp))
-        {
-            camInput.FocusPower += 0.1f;
-        }
-        if (Input.GetKeyDown(KeyCode.PageDown))
-        {
-            camInput.FocusPower += -0.1f;
-        }
 
         //focusXText.text = camInput.FocusX.ToString();
         //focusYText.text = camInput.FocusY.ToString();

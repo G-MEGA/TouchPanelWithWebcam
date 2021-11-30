@@ -305,25 +305,9 @@ public class CamInput
             }
         }
     }
-    float focusPower = 1f;
-    public float FocusPower
-    {
-        get
-        {
-            return focusPower;
-        }
-        set
-        {
-            if (focusPower!=value && value > 0f)
-            {
-                focusPower = value;
-                MarkingPositionsUpdate();
-            }
-        }
-    }
     public List<CustomColor> customColors = new List<CustomColor>();
 
-    public MarkingsUpdateMethod markingsUpdateMethod = MarkingsUpdateMethod.CompareH_SV;//¾ðÁ¦µçÁö ¹Ù²î¾îµµ µÊ
+    public MarkingsUpdateMethod markingsUpdateMethod = MarkingsUpdateMethod.None;//¾ðÁ¦µçÁö ¹Ù²î¾îµµ µÊ
 
     public int resolutionRequestToCamWidth = 1;
     public int resolutionRequestToCamHeight = 1;
@@ -356,12 +340,7 @@ public class CamInput
             {
                 xRatios[j] = (float)j / (lengthJ - 1);
 
-                xRatios[j] = xRatios[j] * 2f - 1f;
-                if (xRatios[j] > 0f)
-                    xRatios[j] = Mathf.Pow(xRatios[j], focusPower);
-                else if (xRatios[j] < 0f)
-                    xRatios[j] = -(Mathf.Pow(-xRatios[j],focusPower));
-                xRatios[j] = 0.5f + xRatios[j] * 0.5f;
+                //xRatios[j] = Mathf.Pow(xRatios[j], Mathf.Pow(2f, focusX));
 
                 xRatios[j] += focusX * (1f - Mathf.Abs(0.5f - xRatios[j]) * 2f);
             }
@@ -370,12 +349,7 @@ public class CamInput
             {
                 yRatios[i] = (float)i / (lengthI - 1);
 
-                yRatios[i] = yRatios[i] * 2f - 1f;
-                if (yRatios[i] > 0f)
-                    yRatios[i] = Mathf.Pow(yRatios[i], focusPower);
-                else if (yRatios[i] < 0f)
-                    yRatios[i] = -(Mathf.Pow(-yRatios[i], focusPower));
-                yRatios[i] = 0.5f + yRatios[i] * 0.5f;
+                //yRatios[i] = Mathf.Pow(yRatios[i], Mathf.Pow(2f, focusY));
 
                 yRatios[i] += focusY * (1f - Mathf.Abs(0.5f - yRatios[i]) * 2f);
             }
@@ -965,7 +939,7 @@ public class CustomColor
     public float allowedHueDelta = 0.1f;//0~0.5
     public float allowedSaturationDelta = 0.1f;//0~1
     public float allowedValueDelta = 0.1f;//0~1
-    public MarkingsUpdateMethod markingsUpdateMethod = MarkingsUpdateMethod.CompareH_SV;//¾ðÁ¦µçÁö ¹Ù²î¾îµµ µÊ
+    public MarkingsUpdateMethod markingsUpdateMethod = MarkingsUpdateMethod.CompareHSV;//¾ðÁ¦µçÁö ¹Ù²î¾îµµ µÊ
 
 }
 public enum MarkingsUpdateMethod
