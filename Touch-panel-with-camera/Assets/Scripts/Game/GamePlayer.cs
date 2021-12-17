@@ -10,6 +10,8 @@ public class GamePlayer : MonoBehaviour
     LaneDisplay laneDisplay;
     [SerializeField]
     AudioSource audioSource;
+    [SerializeField]
+    InGameMenu menu;
 
     AudioClip music;
     /*
@@ -33,6 +35,16 @@ public class GamePlayer : MonoBehaviour
     CamInputManager manager;
     float prevTime = 0f;
     public Note[] notes;
+
+    public int combo=0;
+    public int perfect=0;
+    public int great=0;
+    public int good=0;
+    public int bad=0;
+    const string perfectText = "<color=cyan>PERFECT</color>";
+    const string greatText = "<color=lime>GREAT</color>";
+    const string goodText = "<color=yellow>GOOD</color>";
+    const string badText = "<color=red>BAD</color>";
 
     void Start()
     {
@@ -146,8 +158,14 @@ public class GamePlayer : MonoBehaviour
                             laneDisplay.JumpNoteDisplay(jumpNote.time - currentTime);
                             break;
                         case NoteState.Bad:
+                            bad++;
+                            combo=0;
+                            menu.JudgeAndComboUpdate(badText, combo.ToString(),perfect,great,good,bad);
                             break;
                         case NoteState.Perfect:
+                            perfect++;
+                            combo++;
+                            menu.JudgeAndComboUpdate(perfectText, combo.ToString(), perfect, great, good, bad);
                             break;
                         case NoteState.Processed:
                             break;
@@ -165,12 +183,24 @@ public class GamePlayer : MonoBehaviour
                                 laneDisplay.NormalNoteRDisplay(normalNote.position, normalNote.scale, normalNote.time - currentTime);
                             break;
                         case NoteState.Bad:
+                            bad++;
+                            combo = 0;
+                            menu.JudgeAndComboUpdate(badText,combo.ToString(), perfect, great, good, bad);
                             break;
                         case NoteState.Good:
+                            good++;
+                            combo++;
+                            menu.JudgeAndComboUpdate(goodText, combo.ToString(), perfect, great, good, bad);
                             break;
                         case NoteState.Great:
+                            great++;
+                            combo++;
+                            menu.JudgeAndComboUpdate(greatText, combo.ToString(), perfect, great, good, bad);
                             break;
                         case NoteState.Perfect:
+                            perfect++;
+                            combo++;
+                            menu.JudgeAndComboUpdate(perfectText, combo.ToString(), perfect, great, good, bad);
                             break;
                         case NoteState.Processed:
                             break;
@@ -198,8 +228,14 @@ public class GamePlayer : MonoBehaviour
                             }
                             break;
                         case NoteState.Bad:
+                            bad++;
+                            combo = 0;
+                            menu.JudgeAndComboUpdate(badText, combo.ToString(), perfect, great, good, bad);
                             break;
                         case NoteState.Perfect:
+                            perfect++;
+                            combo++;
+                            menu.JudgeAndComboUpdate(perfectText, combo.ToString(), perfect, great, good, bad);
                             break;
                         case NoteState.Processed:
                             break;
