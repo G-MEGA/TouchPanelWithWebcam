@@ -197,12 +197,18 @@ public class CamInputManager : MonoBehaviour
         camInputCount = camInputs.Length;
         for (int i = 0; i < camInputCount; i++)
         {
-            camInputActiveSaveWhenSceneChange[i] = camInputs[i].Active;
             if (camInputs[i].ActiveChanged != null)
                 foreach (Changed d in camInputs[i].ActiveChanged.GetInvocationList())
                 {
                     camInputs[i].ActiveChanged -= d;
                 }
+            if (camInputs[i].MarkingPositionsChanged != null)
+                foreach (Changed d in camInputs[i].MarkingPositionsChanged.GetInvocationList())
+                {
+                    camInputs[i].MarkingPositionsChanged -= d;
+                }
+
+            camInputActiveSaveWhenSceneChange[i] = camInputs[i].Active;
             camInputs[i].Active = false;
         }
     }

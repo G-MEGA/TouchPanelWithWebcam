@@ -1,0 +1,16 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://Graphics/White.png" type="Texture" id=1]
+[ext_resource path="res://Scripts/Notes/TouchNote.gd" type="Script" id=2]
+
+[node name="TouchR" type="Node2D"]
+script = ExtResource( 2 )
+__meta__ = {
+"_edit_group_": true
+}
+whichLeg = 1
+
+[node name="White" type="Sprite" parent="."]
+modulate = Color( 0.7, 0.85, 1, 1 )
+scale = Vector2( 0.01, 0.002 )
+texture = ExtResource( 1 )

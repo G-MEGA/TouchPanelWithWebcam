@@ -34,9 +34,16 @@ public class GameManager : MonoBehaviour
     static public float greatRange = 0.103f;
     static public float goodRange = 0.144f;
     static public float badRange = 0.185f;
+    static public float slideRange = 0.144f;
+    static public float jumpRange = 0.6f;
+    static public float touchRange = 0.144f;
+    static public float downRange = 0.185f;
 
     static public float showNotesPositionMax = 50f;
     static public float showNotesPositionMin = -10f;
 
     static public float noteSpeed = 10f;
+
+    static public float judgeTimingOffset = 0f;
+    static public float noteSyncOffset = 0f;
 }

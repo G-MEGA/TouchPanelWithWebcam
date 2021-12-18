@@ -25,11 +25,17 @@ public class GamePlayer : MonoBehaviour
      *     S,[위치],[스케일],[시간],[지시(L또는R)],[슬라이드방향(L또는R)]
      * 점프 노트
      *     J,[시간]
+     * 다운 노트
+     *     D,[시간]
+     * 터치노트
+     *     T,[위치],[스케일],[시간],[지시(L또는R)]
      *     
      * 예시
      *     N,0.5,0.2,5,L
      *     S,0.1,0.3,2,L,R
      *     J,7
+     *     D,3.5
+     *     T,0.5,0.2,5.5,L
      */
     string chartData = "";
     CamInputManager manager;
@@ -83,6 +89,16 @@ public class GamePlayer : MonoBehaviour
                     break;
                 case "J":
                     notes[i] = new JumpNote(float.Parse(noteInfo[1]));
+                    break;
+                case "D":
+                    notes[i] = new DownNote(float.Parse(noteInfo[1]));
+                    break;
+                case "T":
+                    if (noteInfo[4] == "L")
+                        whichLeg = Direction.Left;
+                    else
+                        whichLeg = Direction.Right;
+                    notes[i] = new TouchNote(float.Parse(noteInfo[1]), float.Parse(noteInfo[2]), float.Parse(noteInfo[3]), whichLeg);
                     break;
                 default:
                     break;
@@ -145,6 +161,8 @@ public class GamePlayer : MonoBehaviour
             JumpNote jumpNote;
             NormalNote normalNote;
             SlideNote slideNote;
+            DownNote downNote;
+            TouchNote touchNote;
             for (int i = 0; i < length; i++)
             {
                 noteState = notes[i].Process(prevTime, currentTime, manager);
@@ -155,7 +173,7 @@ public class GamePlayer : MonoBehaviour
                     switch (noteState)
                     {
                         case NoteState.BeforeJudge:
-                            laneDisplay.JumpNoteDisplay(jumpNote.time - currentTime);
+                            laneDisplay.JumpNoteDisplay(jumpNote.time - currentTime + GameManager.noteSyncOffset);
                             break;
                         case NoteState.Bad:
                             bad++;
@@ -178,9 +196,9 @@ public class GamePlayer : MonoBehaviour
                     {
                         case NoteState.BeforeJudge:
                             if (normalNote.whichLeg == Direction.Left)
-                                laneDisplay.NormalNoteLDisplay(normalNote.position, normalNote.scale, normalNote.time - currentTime);
+                                laneDisplay.NormalNoteLDisplay(normalNote.position, normalNote.scale, normalNote.time - currentTime + GameManager.noteSyncOffset);
                             else
-                                laneDisplay.NormalNoteRDisplay(normalNote.position, normalNote.scale, normalNote.time - currentTime);
+                                laneDisplay.NormalNoteRDisplay(normalNote.position, normalNote.scale, normalNote.time - currentTime + GameManager.noteSyncOffset);
                             break;
                         case NoteState.Bad:
                             bad++;
@@ -215,17 +233,64 @@ public class GamePlayer : MonoBehaviour
                             if (slideNote.whichLeg == Direction.Left)
                             {
                                 if (slideNote.slideDirection == Direction.Left)
-                                    laneDisplay.SlideNoteLLDisplay(slideNote.position, slideNote.scale, slideNote.time - currentTime);
+                                    laneDisplay.SlideNoteLLDisplay(slideNote.position, slideNote.scale, slideNote.time - currentTime + GameManager.noteSyncOffset);
                                 else
-                                    laneDisplay.SlideNoteLRDisplay(slideNote.position, slideNote.scale, slideNote.time - currentTime);
+                                    laneDisplay.SlideNoteLRDisplay(slideNote.position, slideNote.scale, slideNote.time - currentTime + GameManager.noteSyncOffset);
                             }
                             else
                             {
                                 if (slideNote.slideDirection == Direction.Left)
-                                    laneDisplay.SlideNoteRLDisplay(slideNote.position, slideNote.scale, slideNote.time - currentTime);
+                                    laneDisplay.SlideNoteRLDisplay(slideNote.position, slideNote.scale, slideNote.time - currentTime + GameManager.noteSyncOffset);
                                 else
-                                    laneDisplay.SlideNoteRRDisplay(slideNote.position, slideNote.scale, slideNote.time - currentTime);
+                                    laneDisplay.SlideNoteRRDisplay(slideNote.position, slideNote.scale, slideNote.time - currentTime + GameManager.noteSyncOffset);
                             }
+                            break;
+                        case NoteState.Bad:
+                            bad++;
+                            combo = 0;
+                            menu.JudgeAndComboUpdate(badText, combo.ToString(), perfect, great, good, bad);
+                            break;
+                        case NoteState.Perfect:
+                            perfect++;
+                            combo++;
+                            menu.JudgeAndComboUpdate(perfectText, combo.ToString(), perfect, great, good, bad);
+                            break;
+                        case NoteState.Processed:
+                            break;
+                    }
+                }
+                else if (notes[i] is DownNote)
+                {
+                    downNote = (DownNote)notes[i];
+                    switch (noteState)
+                    {
+                        case NoteState.BeforeJudge:
+                            laneDisplay.DownNoteDisplay(downNote.time - currentTime + GameManager.noteSyncOffset);
+                            break;
+                        case NoteState.Bad:
+                            bad++;
+                            combo = 0;
+                            menu.JudgeAndComboUpdate(badText, combo.ToString(), perfect, great, good, bad);
+                            break;
+                        case NoteState.Perfect:
+                            perfect++;
+                            combo++;
+                            menu.JudgeAndComboUpdate(perfectText, combo.ToString(), perfect, great, good, bad);
+                            break;
+                        case NoteState.Processed:
+                            break;
+                    }
+                }
+                else if (notes[i] is TouchNote)
+                {
+                    touchNote = (TouchNote)notes[i];
+                    switch (noteState)
+                    {
+                        case NoteState.BeforeJudge:
+                            if (touchNote.whichLeg == Direction.Left)
+                                laneDisplay.TouchNoteLDisplay(touchNote.position, touchNote.scale, touchNote.time - currentTime + GameManager.noteSyncOffset);
+                            else
+                                laneDisplay.TouchNoteRDisplay(touchNote.position, touchNote.scale, touchNote.time - currentTime + GameManager.noteSyncOffset);
                             break;
                         case NoteState.Bad:
                             bad++;

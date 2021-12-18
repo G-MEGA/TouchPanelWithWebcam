@@ -1,0 +1,14 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://Graphics/SlideNoteLL.png" type="Texture" id=1]
+[ext_resource path="res://Scripts/Notes/SlideNote.gd" type="Script" id=2]
+
+[node name="SlideLL" type="Node2D"]
+script = ExtResource( 2 )
+__meta__ = {
+"_edit_group_": true
+}
+
+[node name="White" type="Sprite" parent="."]
+scale = Vector2( 0.01, 0.002 )
+texture = ExtResource( 1 )

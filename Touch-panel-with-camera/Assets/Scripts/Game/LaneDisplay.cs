@@ -22,6 +22,12 @@ public class LaneDisplay : MonoBehaviour
     GameObject slideNoteRLPrefab;
     [SerializeField]
     GameObject slideNoteRRPrefab;
+    [SerializeField]
+    GameObject downNotePrefab;
+    [SerializeField]
+    GameObject touchNoteLPrefab;
+    [SerializeField]
+    GameObject touchNoteRPrefab;
 
     List<Transform> footObjectPool = new List<Transform>();
     int nextFootObjectPoolIndex = 0;
@@ -46,6 +52,15 @@ public class LaneDisplay : MonoBehaviour
 
     List<Transform> slideNoteRRPool = new List<Transform>();
     int nextSlideNoteRRPoolIndex = 0;
+
+    List<Transform> downNotePool = new List<Transform>();
+    int nextDownNotePoolIndex = 0;
+
+    List<Transform> touchNoteLPool = new List<Transform>();
+    int nextTouchNoteLPoolIndex = 0;
+
+    List<Transform> touchNoteRPool = new List<Transform>();
+    int nextTouchNoteRPoolIndex = 0;
 
     int length;
     public void Clear()
@@ -90,6 +105,21 @@ public class LaneDisplay : MonoBehaviour
         for (int i = 0; i < length; i++)
             slideNoteRRPool[i].gameObject.SetActive(false);
         nextSlideNoteRRPoolIndex = 0;
+
+        length = downNotePool.Count;
+        for (int i = 0; i < length; i++)
+            downNotePool[i].gameObject.SetActive(false);
+        nextDownNotePoolIndex = 0;
+
+        length = touchNoteLPool.Count;
+        for (int i = 0; i < length; i++)
+            touchNoteLPool[i].gameObject.SetActive(false);
+        nextTouchNoteLPoolIndex = 0;
+
+        length = touchNoteRPool.Count;
+        for (int i = 0; i < length; i++)
+            touchNoteRPool[i].gameObject.SetActive(false);
+        nextTouchNoteRPoolIndex = 0;
     }
 
     public void FootDisplay(float minX,float scale)
@@ -200,5 +230,46 @@ public class LaneDisplay : MonoBehaviour
         slideNoteRRPool[nextSlideNoteRRPoolIndex].localScale = new Vector3(scale, 1f, 1f);
 
         nextSlideNoteRRPoolIndex++;
+    }
+    public void DownNoteDisplay(float leftTime)
+    {
+        notePosition = GameManager.noteSpeed * leftTime;
+        if (notePosition > GameManager.showNotesPositionMax || notePosition < GameManager.showNotesPositionMin)
+            return;
+
+        if (nextDownNotePoolIndex == downNotePool.Count)
+            downNotePool.Add(Instantiate(downNotePrefab, transform).transform);
+        downNotePool[nextDownNotePoolIndex].gameObject.SetActive(true);
+        downNotePool[nextDownNotePoolIndex].localPosition = new Vector3(0f, 0f, notePosition);
+
+        nextDownNotePoolIndex++;
+    }
+    public void TouchNoteLDisplay(float position, float scale, float leftTime)
+    {
+        notePosition = GameManager.noteSpeed * leftTime;
+        if (notePosition > GameManager.showNotesPositionMax || notePosition < GameManager.showNotesPositionMin)
+            return;
+
+        if (nextTouchNoteLPoolIndex == touchNoteLPool.Count)
+            touchNoteLPool.Add(Instantiate(touchNoteLPrefab, transform).transform);
+        touchNoteLPool[nextTouchNoteLPoolIndex].gameObject.SetActive(true);
+        touchNoteLPool[nextTouchNoteLPoolIndex].localPosition = new Vector3(position * width, 0f, notePosition);
+        touchNoteLPool[nextTouchNoteLPoolIndex].localScale = new Vector3(scale, 1f, 1f);
+
+        nextTouchNoteLPoolIndex++;
+    }
+    public void TouchNoteRDisplay(float position, float scale, float leftTime)
+    {
+        notePosition = GameManager.noteSpeed * leftTime;
+        if (notePosition > GameManager.showNotesPositionMax || notePosition < GameManager.showNotesPositionMin)
+            return;
+
+        if (nextTouchNoteRPoolIndex == touchNoteRPool.Count)
+            touchNoteRPool.Add(Instantiate(touchNoteRPrefab, transform).transform);
+        touchNoteRPool[nextTouchNoteRPoolIndex].gameObject.SetActive(true);
+        touchNoteRPool[nextTouchNoteRPoolIndex].localPosition = new Vector3(position * width, 0f, notePosition);
+        touchNoteRPool[nextTouchNoteRPoolIndex].localScale = new Vector3(scale, 1f, 1f);
+
+        nextTouchNoteRPoolIndex++;
     }
 }

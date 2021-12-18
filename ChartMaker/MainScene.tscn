@@ -1,0 +1,656 @@
+[gd_scene load_steps=13 format=2]
+
+[ext_resource path="res://Example/#416 HEAVYgiant - Daydream.wav" type="AudioStream" id=1]
+[ext_resource path="res://Graphics/White.png" type="Texture" id=2]
+[ext_resource path="res://Scripts/NoteMaster.gd" type="Script" id=3]
+[ext_resource path="res://Notes/SlideLR.tscn" type="PackedScene" id=4]
+[ext_resource path="res://Notes/SlideRR.tscn" type="PackedScene" id=5]
+[ext_resource path="res://Notes/NormalL.tscn" type="PackedScene" id=6]
+[ext_resource path="res://Notes/Jump.tscn" type="PackedScene" id=7]
+[ext_resource path="res://Notes/Down.tscn" type="PackedScene" id=8]
+[ext_resource path="res://Notes/SlideRL.tscn" type="PackedScene" id=9]
+[ext_resource path="res://Notes/NormalR.tscn" type="PackedScene" id=12]
+
+[sub_resource type="Animation" id=2]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/path = NodePath("NoteMaster:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, 0 ) ]
+}
+
+[sub_resource type="Animation" id=1]
+resource_name = "새 애니메이션"
+length = 600.0
+step = 0.01
+tracks/0/type = "audio"
+tracks/0/path = NodePath("AudioStreamPlayer")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"clips": [ {
+"end_offset": 0.0,
+"start_offset": 0.0,
+"stream": ExtResource( 1 )
+} ],
+"times": PoolRealArray( 0 )
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("NoteMaster:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0, 600 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Vector2( 0, 0 ), Vector2( 0, 6000 ) ]
+}
+
+[node name="MainScene" type="Node2D"]
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+anims/RESET = SubResource( 2 )
+"anims/새 애니메이션" = SubResource( 1 )
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 1 )
+
+[node name="NoteMaster" type="Node2D" parent="."]
+script = ExtResource( 3 )
+bpm = 128.0
+
+[node name="Lane" type="Node2D" parent="NoteMaster"]
+scale = Vector2( 1, 600 )
+__meta__ = {
+"_edit_lock_": true
+}
+
+[node name="White" type="Sprite" parent="NoteMaster/Lane"]
+position = Vector2( 5, -5 )
+scale = Vector2( 0.01, 0.04 )
+texture = ExtResource( 2 )
+__meta__ = {
+"_edit_lock_": true
+}
+
+[node name="NormalR" parent="NoteMaster" instance=ExtResource( 12 )]
+position = Vector2( 7.5, -37.5 )
+scale = Vector2( 0.25, 1 )
+beat = 8.0
+scale_ = 0.25
+position_ = 0.75
+
+[node name="NormalL" parent="NoteMaster" instance=ExtResource( 6 )]
+position = Vector2( 2.5, -37.5 )
+scale = Vector2( 0.25, 1 )
+beat = 8.0
+scale_ = 0.25
+position_ = 0.25
+
+[node name="NormalR2" parent="NoteMaster" instance=ExtResource( 12 )]
+position = Vector2( 7.5, -56.25 )
+scale = Vector2( 0.25, 1 )
+beat = 12.0
+scale_ = 0.25
+position_ = 0.75
+
+[node name="NormalR3" parent="NoteMaster" instance=ExtResource( 12 )]
+position = Vector2( 7.5, -75 )
+scale = Vector2( 0.25, 1 )
+beat = 16.0
+scale_ = 0.25
+position_ = 0.75
+
+[node name="NormalL2" parent="NoteMaster" instance=ExtResource( 6 )]
+position = Vector2( 2.5, -75 )
+scale = Vector2( 0.25, 1 )
+beat = 16.0
+scale_ = 0.25
+position_ = 0.25
+
+[node name="NormalL3" parent="NoteMaster" instance=ExtResource( 6 )]
+position = Vector2( 2.5, -93.75 )
+scale = Vector2( 0.25, 1 )
+beat = 20.0
+scale_ = 0.25
+position_ = 0.25
+
+[node name="NormalL4" parent="NoteMaster" instance=ExtResource( 6 )]
+position = Vector2( 1.25, -117.188 )
+scale = Vector2( 0.25, 1 )
+beat = 25.0
+scale_ = 0.25
+position_ = 0.125
+
+[node name="SlideLR" parent="NoteMaster" instance=ExtResource( 4 )]
+position = Vector2( 2.52891, -119.531 )
+scale = Vector2( 0.5, 1 )
+beat = 25.5
+scale_ = 0.5
+position_ = 0.252891
+
+[node name="SlideLR2" parent="NoteMaster" instance=ExtResource( 4 )]
+position = Vector2( 5, -121.875 )
+scale = Vector2( 0.5, 1 )
+beat = 26.0
+scale_ = 0.5
+position_ = 0.5
+
+[node name="NormalR4" parent="NoteMaster" instance=ExtResource( 12 )]
+position = Vector2( 1.25, -121.875 )
+scale = Vector2( 0.25, 1 )
+beat = 26.0
+scale_ = 0.25
+position_ = 0.125
+
+[node name="SlideRR" parent="NoteMaster" instance=ExtResource( 5 )]
+position = Vector2( 2.5, -124.219 )
+scale = Vector2( 0.5, 1 )
+beat = 26.5
+scale_ = 0.5
+position_ = 0.25
+
+[node name="SlideRR2" parent="NoteMaster" instance=ExtResource( 5 )]
+position = Vector2( 5, -126.563 )
+scale = Vector2( 0.5, 1 )
+beat = 27.0
+scale_ = 0.5
+position_ = 0.5
+
+[node name="NormalL5" parent="NoteMaster" instance=ExtResource( 6 )]
+position = Vector2( 1.25, -126.57 )
+scale = Vector2( 0.25, 1 )
+beat = 27.0016
+scale_ = 0.25
+position_ = 0.125
+
+[node name="SlideLR3" parent="NoteMaster" instance=ExtResource( 4 )]
+position = Vector2( 2.52891, -128.914 )
+scale = Vector2( 0.5, 1 )
+beat = 27.5016
+scale_ = 0.5
+position_ = 0.252891
+
+[node name="SlideLR4" parent="NoteMaster" instance=ExtResource( 4 )]
+position = Vector2( 5, -131.257 )
+scale = Vector2( 0.5, 1 )
+beat = 28.0015
+scale_ = 0.5
+position_ = 0.5
+
+[node name="NormalR5" parent="NoteMaster" instance=ExtResource( 12 )]
+position = Vector2( 1.25, -131.257 )
+scale = Vector2( 0.25, 1 )
+beat = 28.0015
+scale_ = 0.25
+position_ = 0.125
+
+[node name="SlideRR3" parent="NoteMaster" instance=ExtResource( 5 )]
+position = Vector2( 2.5, -133.601 )
+scale = Vector2( 0.5, 1 )
+beat = 28.5015
+scale_ = 0.5
+position_ = 0.25
+
+[node name="SlideRR4" parent="NoteMaster" instance=ExtResource( 5 )]
+position = Vector2( 5, -135.945 )
+scale = Vector2( 0.5, 1 )
+beat = 29.0015
+scale_ = 0.5
+position_ = 0.5
+
+[node name="NormalL6" parent="NoteMaster" instance=ExtResource( 6 )]
+position = Vector2( 1.25, -135.952 )
+scale = Vector2( 0.25, 1 )
+beat = 29.0031
+scale_ = 0.25
+position_ = 0.125
+
+[node name="SlideLR5" parent="NoteMaster" instance=ExtResource( 4 )]
+position = Vector2( 2.52891, -138.296 )
+scale = Vector2( 0.5, 1 )
+beat = 29.5031
+scale_ = 0.5
+position_ = 0.252891
+
+[node name="SlideLR6" parent="NoteMaster" instance=ExtResource( 4 )]
+position = Vector2( 5, -140.64 )
+scale = Vector2( 0.5, 1 )
+beat = 30.0031
+scale_ = 0.5
+position_ = 0.5
+
+[node name="NormalR6" parent="NoteMaster" instance=ExtResource( 12 )]
+position = Vector2( 1.25, -140.64 )
+scale = Vector2( 0.25, 1 )
+beat = 30.0031
+scale_ = 0.25
+position_ = 0.125
+
+[node name="SlideRR5" parent="NoteMaster" instance=ExtResource( 5 )]
+position = Vector2( 2.5, -142.983 )
+scale = Vector2( 0.5, 1 )
+beat = 30.5031
+scale_ = 0.5
+position_ = 0.25
+
+[node name="SlideRR6" parent="NoteMaster" instance=ExtResource( 5 )]
+position = Vector2( 5, -145.327 )
+scale = Vector2( 0.5, 1 )
+beat = 31.0031
+scale_ = 0.5
+position_ = 0.5
+
+[node name="NormalL7" parent="NoteMaster" instance=ExtResource( 6 )]
+position = Vector2( 1.25, -145.334 )
+scale = Vector2( 0.25, 1 )
+beat = 31.0047
+scale_ = 0.25
+position_ = 0.125
+
+[node name="SlideLR7" parent="NoteMaster" instance=ExtResource( 4 )]
+position = Vector2( 2.52891, -147.678 )
+scale = Vector2( 0.5, 1 )
+beat = 31.5047
+scale_ = 0.5
+position_ = 0.252891
+
+[node name="SlideLR8" parent="NoteMaster" instance=ExtResource( 4 )]
+position = Vector2( 5, -150.022 )
+scale = Vector2( 0.5, 1 )
+beat = 32.0047
+scale_ = 0.5
+position_ = 0.5
+
+[node name="NormalR7" parent="NoteMaster" instance=ExtResource( 12 )]
+position = Vector2( 1.25, -150.022 )
+scale = Vector2( 0.25, 1 )
+beat = 32.0047
+scale_ = 0.25
+position_ = 0.125
+
+[node name="SlideRR7" parent="NoteMaster" instance=ExtResource( 5 )]
+position = Vector2( 2.5, -152.366 )
+scale = Vector2( 0.5, 1 )
+beat = 32.5047
+scale_ = 0.5
+position_ = 0.25
+
+[node name="SlideRR8" parent="NoteMaster" instance=ExtResource( 5 )]
+position = Vector2( 5, -154.709 )
+scale = Vector2( 0.5, 1 )
+beat = 33.0047
+scale_ = 0.5
+position_ = 0.5
+
+[node name="NormalL8" parent="NoteMaster" instance=ExtResource( 6 )]
+position = Vector2( 1.25, -154.713 )
+scale = Vector2( 0.25, 1 )
+beat = 33.0055
+scale_ = 0.25
+position_ = 0.125
+
+[node name="SlideLR9" parent="NoteMaster" instance=ExtResource( 4 )]
+position = Vector2( 2.52891, -157.057 )
+scale = Vector2( 0.5, 1 )
+beat = 33.5055
+scale_ = 0.5
+position_ = 0.252891
+
+[node name="SlideLR10" parent="NoteMaster" instance=ExtResource( 4 )]
+position = Vector2( 5, -159.401 )
+scale = Vector2( 0.5, 1 )
+beat = 34.0055
+scale_ = 0.5
+position_ = 0.5
+
+[node name="NormalR8" parent="NoteMaster" instance=ExtResource( 12 )]
+position = Vector2( 1.25, -159.401 )
+scale = Vector2( 0.25, 1 )
+beat = 34.0055
+scale_ = 0.25
+position_ = 0.125
+
+[node name="SlideRR9" parent="NoteMaster" instance=ExtResource( 5 )]
+position = Vector2( 2.5, -161.744 )
+scale = Vector2( 0.5, 1 )
+beat = 34.5055
+scale_ = 0.5
+position_ = 0.25
+
+[node name="SlideRR10" parent="NoteMaster" instance=ExtResource( 5 )]
+position = Vector2( 5, -164.088 )
+scale = Vector2( 0.5, 1 )
+beat = 35.0055
+scale_ = 0.5
+position_ = 0.5
+
+[node name="NormalL9" parent="NoteMaster" instance=ExtResource( 6 )]
+position = Vector2( 1.25, -164.1 )
+scale = Vector2( 0.25, 1 )
+beat = 35.008
+scale_ = 0.25
+position_ = 0.125
+
+[node name="SlideLR11" parent="NoteMaster" instance=ExtResource( 4 )]
+position = Vector2( 2.52891, -166.444 )
+scale = Vector2( 0.5, 1 )
+beat = 35.508
+scale_ = 0.5
+position_ = 0.252891
+
+[node name="SlideLR12" parent="NoteMaster" instance=ExtResource( 4 )]
+position = Vector2( 5, -168.787 )
+scale = Vector2( 0.5, 1 )
+beat = 36.0079
+scale_ = 0.5
+position_ = 0.5
+
+[node name="NormalR9" parent="NoteMaster" instance=ExtResource( 12 )]
+position = Vector2( 1.25, -168.787 )
+scale = Vector2( 0.25, 1 )
+beat = 36.0079
+scale_ = 0.25
+position_ = 0.125
+
+[node name="SlideRR11" parent="NoteMaster" instance=ExtResource( 5 )]
+position = Vector2( 2.5, -171.131 )
+scale = Vector2( 0.5, 1 )
+beat = 36.5079
+scale_ = 0.5
+position_ = 0.25
+
+[node name="SlideRR12" parent="NoteMaster" instance=ExtResource( 5 )]
+position = Vector2( 5, -173.475 )
+scale = Vector2( 0.5, 1 )
+beat = 37.0079
+scale_ = 0.5
+position_ = 0.5
+
+[node name="Jump" parent="NoteMaster" instance=ExtResource( 7 )]
+position = Vector2( 0, -187.5 )
+beat = 40.0
+scale_ = 1.0
+
+[node name="NormalR10" parent="NoteMaster" instance=ExtResource( 12 )]
+position = Vector2( 5, -196.875 )
+scale = Vector2( 0.5, 1 )
+beat = 42.0
+scale_ = 0.5
+position_ = 0.5
+
+[node name="NormalL10" parent="NoteMaster" instance=ExtResource( 6 )]
+position = Vector2( 5, -201.563 )
+scale = Vector2( 0.5, 1 )
+beat = 43.0
+scale_ = 0.5
+position_ = 0.5
+
+[node name="NormalR11" parent="NoteMaster" instance=ExtResource( 12 )]
+position = Vector2( 7.5, -206.25 )
+scale = Vector2( 0.25, 1 )
+beat = 44.0
+scale_ = 0.25
+position_ = 0.75
+
+[node name="NormalL11" parent="NoteMaster" instance=ExtResource( 6 )]
+position = Vector2( 2.5, -206.25 )
+scale = Vector2( 0.25, 1 )
+beat = 44.0
+scale_ = 0.25
+position_ = 0.25
+
+[node name="NormalR12" parent="NoteMaster" instance=ExtResource( 12 )]
+position = Vector2( 5, -210.938 )
+scale = Vector2( 0.25, 1 )
+beat = 45.0
+scale_ = 0.25
+position_ = 0.5
+
+[node name="NormalR13" parent="NoteMaster" instance=ExtResource( 12 )]
+position = Vector2( 7.5, -215.625 )
+scale = Vector2( 0.25, 1 )
+beat = 46.0
+scale_ = 0.25
+position_ = 0.75
+
+[node name="NormalL12" parent="NoteMaster" instance=ExtResource( 6 )]
+position = Vector2( 2.5, -215.625 )
+scale = Vector2( 0.25, 1 )
+beat = 46.0
+scale_ = 0.25
+position_ = 0.25
+
+[node name="Down" parent="NoteMaster" instance=ExtResource( 8 )]
+position = Vector2( 0, -225 )
+beat = 48.0
+scale_ = 1.0
+
+[node name="NormalR14" parent="NoteMaster" instance=ExtResource( 12 )]
+position = Vector2( 7.5, -225 )
+scale = Vector2( 0.25, 1 )
+beat = 48.0
+scale_ = 0.25
+position_ = 0.75
+
+[node name="Down2" parent="NoteMaster" instance=ExtResource( 8 )]
+position = Vector2( 0, -243.75 )
+beat = 52.0
+scale_ = 1.0
+
+[node name="NormalL13" parent="NoteMaster" instance=ExtResource( 6 )]
+position = Vector2( 2.5, -243.75 )
+scale = Vector2( 0.25, 1 )
+beat = 52.0
+scale_ = 0.25
+position_ = 0.25
+
+[node name="NormalR15" parent="NoteMaster" instance=ExtResource( 12 )]
+position = Vector2( 4, -262.5 )
+scale = Vector2( 0.25, 1 )
+beat = 56.0
+scale_ = 0.25
+position_ = 0.4
+
+[node name="NormalR16" parent="NoteMaster" instance=ExtResource( 12 )]
+position = Vector2( 5, -267.188 )
+scale = Vector2( 0.25, 1 )
+beat = 57.0
+scale_ = 0.25
+position_ = 0.5
+
+[node name="NormalR17" parent="NoteMaster" instance=ExtResource( 12 )]
+position = Vector2( 6, -271.875 )
+scale = Vector2( 0.25, 1 )
+beat = 58.0
+scale_ = 0.25
+position_ = 0.6
+
+[node name="NormalR18" parent="NoteMaster" instance=ExtResource( 12 )]
+position = Vector2( 7, -276.563 )
+scale = Vector2( 0.25, 1 )
+beat = 59.0
+scale_ = 0.25
+position_ = 0.7
+
+[node name="NormalL14" parent="NoteMaster" instance=ExtResource( 6 )]
+position = Vector2( 6, -281.25 )
+scale = Vector2( 0.25, 1 )
+beat = 60.0
+scale_ = 0.25
+position_ = 0.6
+
+[node name="NormalL15" parent="NoteMaster" instance=ExtResource( 6 )]
+position = Vector2( 5, -285.938 )
+scale = Vector2( 0.25, 1 )
+beat = 61.0
+scale_ = 0.25
+position_ = 0.5
+
+[node name="NormalL16" parent="NoteMaster" instance=ExtResource( 6 )]
+position = Vector2( 4, -290.625 )
+scale = Vector2( 0.25, 1 )
+beat = 62.0
+scale_ = 0.25
+position_ = 0.4
+
+[node name="NormalL17" parent="NoteMaster" instance=ExtResource( 6 )]
+position = Vector2( 3, -295.313 )
+scale = Vector2( 0.25, 1 )
+beat = 63.0
+scale_ = 0.25
+position_ = 0.3
+
+[node name="NormalR19" parent="NoteMaster" instance=ExtResource( 12 )]
+position = Vector2( 7, -300 )
+scale = Vector2( 0.25, 1 )
+beat = 64.0
+scale_ = 0.25
+position_ = 0.7
+
+[node name="SlideRL" parent="NoteMaster" instance=ExtResource( 9 )]
+position = Vector2( 6.49646, -302.344 )
+scale = Vector2( 0.35, 1 )
+beat = 64.5
+scale_ = 0.35
+position_ = 0.649646
+
+[node name="NormalL18" parent="NoteMaster" instance=ExtResource( 6 )]
+position = Vector2( 3, -304.688 )
+scale = Vector2( 0.25, 1 )
+beat = 65.0
+scale_ = 0.25
+position_ = 0.3
+
+[node name="SlideLR13" parent="NoteMaster" instance=ExtResource( 4 )]
+position = Vector2( 3.5, -307.031 )
+scale = Vector2( 0.35, 1 )
+beat = 65.5
+scale_ = 0.35
+position_ = 0.35
+
+[node name="NormalR20" parent="NoteMaster" instance=ExtResource( 12 )]
+position = Vector2( 7, -309.375 )
+scale = Vector2( 0.25, 1 )
+beat = 66.0
+scale_ = 0.25
+position_ = 0.7
+
+[node name="SlideRL2" parent="NoteMaster" instance=ExtResource( 9 )]
+position = Vector2( 6.49646, -311.719 )
+scale = Vector2( 0.35, 1 )
+beat = 66.5
+scale_ = 0.35
+position_ = 0.649646
+
+[node name="NormalL19" parent="NoteMaster" instance=ExtResource( 6 )]
+position = Vector2( 3, -314.063 )
+scale = Vector2( 0.25, 1 )
+beat = 67.0
+scale_ = 0.25
+position_ = 0.3
+
+[node name="SlideLR14" parent="NoteMaster" instance=ExtResource( 4 )]
+position = Vector2( 3.5, -316.406 )
+scale = Vector2( 0.35, 1 )
+beat = 67.5
+scale_ = 0.35
+position_ = 0.35
+
+[node name="Down3" parent="NoteMaster" instance=ExtResource( 8 )]
+position = Vector2( 0, -318.75 )
+beat = 68.0
+scale_ = 1.0
+
+[node name="Down4" parent="NoteMaster" instance=ExtResource( 8 )]
+position = Vector2( 0, -323.438 )
+beat = 69.0
+scale_ = 1.0
+
+[node name="Down5" parent="NoteMaster" instance=ExtResource( 8 )]
+position = Vector2( 0, -328.125 )
+beat = 70.0
+scale_ = 1.0
+
+[node name="Jump2" parent="NoteMaster" instance=ExtResource( 7 )]
+position = Vector2( 0, -332.813 )
+beat = 71.0
+scale_ = 1.0
+
+[node name="Lane2" type="Sprite" parent="."]
+modulate = Color( 0, 0, 0, 0.498039 )
+position = Vector2( 5, 0 )
+scale = Vector2( 0.01, 0.001 )
+texture = ExtResource( 2 )
+__meta__ = {
+"_edit_lock_": true
+}
+
+[node name="NotePalette" type="Node2D" parent="."]
+
+[node name="NormalR" parent="NotePalette" instance=ExtResource( 12 )]
+position = Vector2( 18.9242, -7.59733 )
+scale = Vector2( 0.25, 1 )
+beat = null
+scale_ = 0.25
+position_ = null
+
+[node name="NormalL" parent="NotePalette" instance=ExtResource( 6 )]
+position = Vector2( 13.9242, -7.59733 )
+scale = Vector2( 0.25, 1 )
+beat = null
+scale_ = 0.25
+position_ = null
+
+[node name="NormalL5" parent="NotePalette" instance=ExtResource( 6 )]
+position = Vector2( 13.9242, 0.501181 )
+scale = Vector2( 0.25, 1 )
+beat = null
+scale_ = 0.25
+position_ = null
+
+[node name="SlideLR3" parent="NotePalette" instance=ExtResource( 4 )]
+position = Vector2( 15.2031, -1.84257 )
+scale = Vector2( 0.5, 1 )
+beat = null
+scale_ = 0.5
+position_ = null
+
+[node name="SlideLR4" parent="NotePalette" instance=ExtResource( 4 )]
+position = Vector2( 17.6742, -4.18632 )
+scale = Vector2( 0.5, 1 )
+beat = null
+scale_ = 0.5
+position_ = null
+
+[node name="NormalR5" parent="NotePalette" instance=ExtResource( 12 )]
+position = Vector2( 22.1909, 0.751181 )
+scale = Vector2( 0.25, 1 )
+beat = null
+scale_ = 0.25
+position_ = null
+
+[node name="SlideRR3" parent="NotePalette" instance=ExtResource( 5 )]
+position = Vector2( 23.4409, -1.59257 )
+scale = Vector2( 0.5, 1 )
+beat = null
+scale_ = 0.5
+position_ = null
+
+[node name="SlideRR4" parent="NotePalette" instance=ExtResource( 5 )]
+position = Vector2( 25.9409, -3.93632 )
+scale = Vector2( 0.5, 1 )
+beat = null
+scale_ = 0.5
+position_ = null
