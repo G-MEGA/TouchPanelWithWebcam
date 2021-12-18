@@ -312,8 +312,8 @@ public class CamInput
     public int resolutionRequestToCamWidth = 1;
     public int resolutionRequestToCamHeight = 1;
     public bool shadow = false;
-    public int vertexArea = 25;
-    public int minGroupArea = 5;
+    public int vertexArea = 125;
+    public int minGroupArea = 75;
 
     public CamInput(WebCamTexture cam)
     {

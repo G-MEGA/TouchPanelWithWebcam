@@ -304,6 +304,7 @@ public class CamInputManager : MonoBehaviour
                 if (camInput0.VertexCount >= 2 &&  camInput1.VertexCount>=2)
                 {
                     for (int i = 0; i < width; i++)
+                    //for (int i = width - 1; i >= 0; i--)
                     {
                         for (int j = 0; j < height; j++)
                         {
@@ -360,20 +361,19 @@ public class CamInputManager : MonoBehaviour
                                         }
                                     }
 
+                                    touches[touchesLastIndex].x = (touches[touchesLastIndex].maxX + touches[touchesLastIndex].minX) * 0.5f;//화이트인 경우에는 당연하고 그레이인 경우에도 그레이 처리할 때 필요하므로 x,y좌표 계산 해줘야함
+                                    touches[touchesLastIndex].y = (touches[touchesLastIndex].maxY + touches[touchesLastIndex].minY) * 0.5f;
+
                                     if (prevWhite)//화이트와 겹친경우 > 화이트 확정
                                     {
                                         isGrayTouch[touchesLastIndex] = false;
 
-                                        touches[touchesLastIndex].x = (touches[touchesLastIndex].maxX + touches[touchesLastIndex].minX) * 0.5f;
-                                        touches[touchesLastIndex].y = (touches[touchesLastIndex].maxY + touches[touchesLastIndex].minY) * 0.5f;
-
                                         touches[touchesLastIndex].isGhost = false;
-
+                                        touches[touchesLastIndex].isDownThisFrame = false;
                                         for (int k = 0; k <= prevTouchesLastIndex; k++)
                                         {
                                             if (prevTouchesCheck4Update[k] && !prevTouches[k].isGhost)
                                             {
-                                                touches[touchesLastIndex].isDownThisFrame = false;
                                                 if (touches[touchesLastIndex].x > prevTouches[k].x + 0.1f)
                                                     touches[touchesLastIndex].moveRight = true;
                                                 if (touches[touchesLastIndex].x < prevTouches[k].x - 0.1f)
@@ -463,12 +463,12 @@ public class CamInputManager : MonoBehaviour
                                         isGrayTouch[touchesLastIndex] = false;
 
                                         touches[touchesLastIndex].isGhost = false;
+                                        touches[touchesLastIndex].isDownThisFrame = false;
 
                                         for (int k = 0; k <= prevTouchesLastIndex; k++)
                                         {
                                             if (prevTouchesCheck4Update[k] && !prevTouches[k].isGhost)
                                             {
-                                                touches[touchesLastIndex].isDownThisFrame = false;
                                                 if (touches[touchesLastIndex].x > prevTouches[k].x + 0.1f)
                                                     touches[touchesLastIndex].moveRight = true;
                                                 if (touches[touchesLastIndex].x < prevTouches[k].x - 0.1f)
