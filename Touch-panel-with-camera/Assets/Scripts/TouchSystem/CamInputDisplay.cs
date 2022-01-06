@@ -143,9 +143,7 @@ public class CamInputDisplay : MaskableGraphic
             markingTexture.Apply();
         }
     }
-    /// <summary>
-    /// Returns the texture used to draw this Graphic.
-    /// </summary>
+
     public override Texture mainTexture
     {
         get
