@@ -1,4 +1,6 @@
 # What is this?
+If you have two or more webcams, you can enjoy DANCERUSH at home.\
+Like this\
 https://youtu.be/PRaJNX6FAH0
 \
 \
