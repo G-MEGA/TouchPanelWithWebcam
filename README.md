@@ -3,6 +3,8 @@ If you have two or more webcams, you can enjoy DANCERUSH STARDOM at home.\
 Like this\
 https://youtu.be/PRaJNX6FAH0
 \
+# Tutorial (Korean)
+https://tmega.tistory.com/109
 \
 \
 \
